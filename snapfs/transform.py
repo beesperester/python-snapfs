@@ -2,18 +2,16 @@ from __future__ import annotations
 
 import json
 
-from typing import Dict, Optional, Union
+from typing import Dict, Any
 from hashlib import sha256
 from pathlib import Path
 
-JsonDict = Dict[str, Optional[Union[str, int, float, "JsonDict"]]]
 
-
-def dict_to_json(data: JsonDict) -> str:
+def dict_to_json(data: Dict[str, Any]) -> str:
     return json.dumps(data, indent=2, sort_keys=True)
 
 
-def json_to_dict(data: str) -> JsonDict:
+def json_to_dict(data: str) -> Dict[str, Any]:
     return json.loads(data)
 
 

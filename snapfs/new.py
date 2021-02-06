@@ -4,7 +4,7 @@ import fnmatch
 
 from pathlib import Path
 from dataclasses import dataclass
-from typing import Dict, List, TypeVar, Callable, Any, Sequence, Union
+from typing import Dict, List, Optional, TypeVar, Callable, Any, Sequence, Union
 
 from snapfs import transform, fs
 
@@ -49,6 +49,32 @@ class Branch:
 class Tag:
     message: str
     commit_hashid: str = ""
+
+
+@dataclass
+class Difference:
+    path: Path
+
+
+@dataclass
+class FileAddedDifference(Difference):
+    """
+    This class represents a file added message
+    """
+
+
+@dataclass
+class FileUpdatedDifference(Difference):
+    """
+    This class represents a file updated message
+    """
+
+
+@dataclass
+class FileRemovedDifference(Difference):
+    """
+    This class represents a file removed message
+    """
 
 
 class Repository:
@@ -116,24 +142,47 @@ class Repository:
 
             branch = Branch(commit_hashid)
 
-            store_branch(branch_path, branch)
+            store_branch_as_file(branch_path, branch)
         else:
-            branch = load_branch(branch_path)
+            branch = load_file_as_branch(branch_path)
 
         # update head
         head = Head(str(
             branch_path.relative_to(self.get_repository_path())
         ))
 
-        store_head(self.get_head_path(), head)
+        store_head_as_file(self.get_head_path(), head)
 
         return branch
 
     def get_head(self) -> Head:
-        return load_head(self.get_head_path())
+        return load_file_as_head(self.get_head_path())
 
     def get_latest_commit_hashid(self) -> str:
         commit_hashid = ""
+
+        try:
+            reference = self.get_reference()
+
+            if isinstance(reference, (Branch, Tag)):
+                commit_hashid = reference.commit_hashid
+        except Exception:
+            head = self.get_head()
+
+            commit_hashid = head.ref
+
+        return commit_hashid
+
+    def get_latest_commit(self) -> Commit:
+        commit_hashid = self.get_latest_commit_hashid()
+
+        commit_hashid_path = self.get_blobs_path().joinpath(
+            transform.hashid_to_path(commit_hashid)
+        )
+
+        return load_blob_as_commit(commit_hashid_path)
+
+    def get_reference(self) -> Union[Branch, Tag]:
         head = self.get_head()
 
         if not head.ref:
@@ -141,36 +190,70 @@ class Repository:
 
         if head.ref.startswith("references"):
             if "branches" in head.ref:
-                branch = load_branch(
+                return load_file_as_branch(
                     self.get_repository_path().joinpath(head.ref)
                 )
-
-                commit_hashid = branch.commit_hashid
             elif "tags" in head.ref:
-                tag = load_tag(
+                return load_file_as_tag(
                     self.get_repository_path().joinpath(head.ref)
                 )
 
-                commit_hashid = tag.commit_hashid
-        else:
-            commit_hashid = head.ref
-
-        return commit_hashid
-
-    def get_reference(self) -> Commit:
-        commit_hashid = self.get_latest_commit_hashid()
-
-        commit_hashid_path = self.get_blobs_path().joinpath(
-            transform.hashid_to_path(commit_hashid)
-        )
-
-        return load_commit(commit_hashid_path)
+        raise Exception("Reference is commit hashid")
 
     def get_tags(self) -> List[Tag]:
         return load_tags(self.get_tags_path())
 
     def get_branches(self) -> List[Branch]:
         return load_branches(self.get_branches_path())
+
+    def commit(self, author: Author, message: str, tree: Directory) -> str:
+        head = self.get_head()
+
+        tree_hashid = store_tree_as_blob(self.get_blobs_path(), tree)
+
+        previous_commit_hashid = self.get_latest_commit_hashid()
+
+        commit = Commit(author, message, tree_hashid, previous_commit_hashid)
+
+        commit_hashid = store_commit_as_blob(self.get_blobs_path(), commit)
+
+        try:
+            reference = self.get_reference()
+
+            data = {
+                **as_dict(reference),
+                "commit_hashid": commit_hashid
+            }
+
+            if isinstance(reference, Branch):
+                branch = Branch(**data)
+
+                store_branch_as_file(
+                    self.get_repository_path().joinpath(head.ref),
+                    branch
+                )
+            elif isinstance(reference, Tag):
+                # set head to commit hashid
+                data = {
+                    **as_dict(head),
+                    "commit_hashid": commit_hashid
+                }
+
+                head = Head(**data)
+
+                store_head_as_file(self.get_head_path(), head)
+        except Exception:
+            # set head to commit hashid
+            data = {
+                **as_dict(head),
+                "commit_hashid": commit_hashid
+            }
+
+            head = Head(**data)
+
+            store_head_as_file(self.get_head_path(), head)
+
+        return commit_hashid
 
 
 T = TypeVar("T")
@@ -185,49 +268,49 @@ def as_dict(instance: object) -> dict:
     return instance.__dict__
 
 
-def store_branch(path: Path, branch: Branch) -> None:
+def store_branch_as_file(path: Path, branch: Branch) -> None:
     data = as_dict(branch)
 
     fs.save_data_as_file(path, data, override=True)
 
 
-def load_branch(path: Path) -> Branch:
+def load_file_as_branch(path: Path) -> Branch:
     return Branch(**fs.load_file_as_data(path))
 
 
 def load_branches(path: Path) -> List[Branch]:
     return [
-        load_branch(path.joinpath(x)) for x in os.listdir(path)
+        load_file_as_branch(path.joinpath(x)) for x in os.listdir(path)
     ]
 
 
-def store_tag(path: Path, tag: Tag) -> None:
+def store_tag_as_file(path: Path, tag: Tag) -> None:
     data = as_dict(tag)
 
     fs.save_data_as_file(path, data, override=True)
 
 
-def load_tag(path: Path) -> Tag:
+def load_file_as_tag(path: Path) -> Tag:
     return Tag(**fs.load_file_as_data(path))
 
 
 def load_tags(path: Path) -> List[Tag]:
     return [
-        load_tag(path.joinpath(x)) for x in os.listdir(path)
+        load_file_as_tag(path.joinpath(x)) for x in os.listdir(path)
     ]
 
 
-def store_head(path: Path, head: Head) -> None:
+def store_head_as_file(path: Path, head: Head) -> None:
     data = as_dict(head)
 
     fs.save_data_as_file(path, data, override=True)
 
 
-def load_head(path: Path) -> Head:
+def load_file_as_head(path: Path) -> Head:
     return Head(**fs.load_file_as_data(path))
 
 
-def store_commit(directory: Path, commit: Commit) -> str:
+def store_commit_as_blob(directory: Path, commit: Commit) -> str:
     data = {
         **as_dict(commit),
         "author": as_dict(commit.author)
@@ -236,27 +319,133 @@ def store_commit(directory: Path, commit: Commit) -> str:
     return fs.save_data_as_blob(directory, data)
 
 
-def load_commit(path: Path) -> Commit:
-    return Commit(**fs.load_file_as_data(path))
+def load_blob_as_commit(path: Path) -> Commit:
+    data = fs.load_file_as_data(path)
+
+    data["author"] = Author(**data["author"])
+
+    return Commit(**data)
 
 
-def store_file(directory: Path, file: File) -> str:
+def store_file_as_blob(directory: Path, file: File) -> str:
     return fs.copy_file_as_blob(directory, file.path)
 
 
-def store_tree(directory: Path, tree: Directory) -> str:
+def load_blob_as_file(directory: Path, hashid: str) -> File:
+    hashid_path = directory.joinpath(
+        transform.hashid_to_path(hashid)
+    )
+
+    return File(hashid_path)
+
+
+def serialize_file(file: File) -> str:
+    return transform.file_to_hashid(file.path)
+
+
+def store_tree_as_blob(directory: Path, tree: Directory) -> str:
     data = {
         "directories": {
-            key: store_tree(directory, value)
+            key: store_tree_as_blob(directory, value)
             for key, value in tree.directories.items()
         },
         "files": {
-            key: store_file(directory, value)
+            key: store_file_as_blob(directory, value)
             for key, value in tree.files.items()
         }
     }
 
     return fs.save_data_as_blob(directory, data)
+
+
+def load_blob_as_tree(directory: Path, hashid: str) -> Directory:
+    data = fs.load_blob_as_data(directory, hashid)
+
+    data["directories"] = {
+        key: load_blob_as_tree(directory, value)
+        for key, value in data["directories"].items()
+    }
+
+    data["files"] = {
+        key: load_blob_as_file(directory, value)
+        for key, value in data["files"].items()
+    }
+
+    return Directory(**data)
+
+
+def serialize_tree(tree: Directory) -> str:
+    data = {
+        "directories": {
+            key: serialize_tree(value)
+            for key, value in tree.directories.items()
+        },
+        "files": {
+            key: serialize_file(value)
+            for key, value in tree.files.items()
+        }
+    }
+
+    return transform.string_to_hashid(
+        transform.dict_to_json(data)
+    )
+
+
+def compare_trees(
+    a: Directory,
+    b: Directory,
+    differences: List[Difference] = [],
+    path: Optional[Path] = None
+) -> None:
+    if path is None:
+        path = Path()
+
+    for key, value in a.directories.items():
+        if key not in b.directories.keys():
+            compare_trees(
+                value,
+                Directory({}, {}),
+                differences,
+                path.joinpath(key)
+            )
+        else:
+            compare_trees(
+                value,
+                b.directories[key],
+                differences,
+                path.joinpath(key)
+            )
+
+    # test for added or updated files
+    for key, value in a.files.items():
+        file_path = path.joinpath(key)
+
+        if key not in b.files.keys():
+            differences.append(
+                FileAddedDifference(
+                    file_path
+                )
+            )
+        elif (
+            transform.file_to_hashid(value.path)
+            != transform.file_to_hashid(b.files[key].path)
+        ):
+            differences.append(
+                FileUpdatedDifference(
+                    file_path
+                )
+            )
+
+    # test for removed files
+    for key, value in b.files.items():
+        file_path = path.joinpath(key)
+
+        if key not in a.files.keys():
+            differences.append(
+                FileRemovedDifference(
+                    file_path
+                )
+            )
 
 
 def load_ignore_file(directory: Path) -> List[str]:
@@ -329,14 +518,25 @@ if __name__ == "__main__":
 
     repository.checkout("main")
 
-    # author = Author("beesperester")
+    author = Author("beesperester")
 
-    # tree = get_tree(Path(os.getcwd()).joinpath(".data/test"), [".snapfs"])
+    tree = get_tree(Path(os.getcwd()).joinpath(".data/test"), [".snapfs"])
 
-    # tree_hashid = store_tree(test_directory, tree)
+    # repository.commit(author, "initial_commit", tree)
 
-    # commit = Commit(author, "initial commit", tree_hashid)
+    latest_commit = repository.get_latest_commit()
 
-    # commit_hashid = store_commit(test_directory, commit)
+    latest_tree = load_blob_as_tree(
+        repository.get_blobs_path(),
+        latest_commit.tree_hashid
+    )
 
-    # print(commit_hashid)
+    if serialize_tree(tree) != serialize_tree(latest_tree):
+        print("compare")
+        differences = []
+
+        compare_trees(tree, latest_tree, differences)
+
+        apply(print, differences)
+    else:
+        print("don't compare")

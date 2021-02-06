@@ -66,6 +66,14 @@ def load_file_as_data(file_path: Path) -> Dict[str, Any]:
     return transform.json_to_dict(load_file(file_path))
 
 
+def load_blob_as_data(directory: Path, hashid: str) -> Dict[str, Any]:
+    hashid_path = directory.joinpath(
+        transform.hashid_to_path(hashid)
+    )
+
+    return load_file_as_data(hashid_path)
+
+
 def copy_file(source: Path, target: Path) -> None:
     shutil.copyfile(source, target)
 
