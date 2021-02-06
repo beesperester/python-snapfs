@@ -161,7 +161,7 @@ class Blob(Serializable):
         for key, value in data.items():
             data_serialized[key] = cls.save_item(directory, value)
 
-        return fs.save_blob(directory, data_serialized)
+        return fs.save_data_as_blob(directory, data_serialized)
 
     def save(self, directory: Path) -> str:
         return self.save_recursive(directory, self.get_dict())
@@ -220,7 +220,7 @@ class Directory(Blob):
             "files": files_serialized
         }
 
-        return fs.save_blob(directory, data_serialized)
+        return fs.save_data_as_blob(directory, data_serialized)
 
 
 class Commit(Blob):
