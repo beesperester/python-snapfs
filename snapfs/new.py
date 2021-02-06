@@ -52,6 +52,11 @@ class Tag:
 
 
 @dataclass
+class Stage:
+    files: List[File]
+
+
+@dataclass
 class Difference:
     path: Path
 
@@ -127,6 +132,9 @@ class Repository:
 
     def get_head_path(self) -> Path:
         return self.get_repository_path().joinpath("HEAD")
+
+    def get_stage_path(self) -> Path:
+        return self.get_repository_path().joinpath("stage")
 
     def get_branch_path(self, name: str) -> Path:
         return self.get_branches_path().joinpath(name)
@@ -266,6 +274,22 @@ def apply(callback: Callable[[T], Any], values: Sequence[T]) -> None:
 
 def as_dict(instance: object) -> dict:
     return instance.__dict__
+
+
+def store_stage_as_file(path: Path, stage: Stage) -> None:
+    data = as_dict(stage)
+
+    data["files"] = [str(x.path) for x in stage.files]
+
+    fs.save_data_as_file(path, data, override=True)
+
+
+def load_file_as_stage(path: Path) -> Stage:
+    data = fs.load_file_as_data(path)
+
+    data["files"] = [File(x) for x in data["files"]]
+
+    return Stage(**data)
 
 
 def store_branch_as_file(path: Path, branch: Branch) -> None:

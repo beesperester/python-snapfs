@@ -1,10 +1,29 @@
 from __future__ import annotations
 
 import json
+import re
 
-from typing import Dict, Any
+from typing import Dict, Any, Callable, Sequence, TypeVar
 from hashlib import sha256
 from pathlib import Path
+
+
+T = TypeVar("T")
+
+
+def apply(callback: Callable[[T], Any], values: Sequence[T]) -> None:
+    for value in values:
+        callback(value)
+
+
+def as_dict(instance: object) -> dict:
+    return instance.__dict__
+
+
+def slug(string: str) -> str:
+    matches = re.findall(re.compile(r"(\w+)"), string)
+
+    return "".join(list(matches))
 
 
 def dict_to_json(data: Dict[str, Any]) -> str:

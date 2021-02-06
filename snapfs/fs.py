@@ -2,7 +2,7 @@ import stat
 import shutil
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from snapfs import transform
 
@@ -91,3 +91,24 @@ def copy_file_as_blob(directory: Path, source: Path) -> str:
         hashid_path.chmod(stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH)
 
     return hashid
+
+
+def load_ignore_file(directory: Path) -> List[str]:
+    patterns = []
+
+    ignore_file_path = directory.joinpath(".ignore")
+
+    if ignore_file_path.is_file():
+        contents = load_file(ignore_file_path)
+
+        patterns = list(
+            filter(
+                bool,
+                [
+                    x.strip() for x in contents.split("\n")
+                    if not x.startswith("#")
+                ]
+            )
+        )
+
+    return patterns
