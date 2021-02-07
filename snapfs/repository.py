@@ -1,7 +1,7 @@
 import os
 
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 
 from snapfs import (
     references,
@@ -20,6 +20,7 @@ from snapfs.datatypes import (
     Directory,
     FileAddedDifference,
     FileUpdatedDifference,
+    FileRemovedDifference,
     Head,
     Stage,
     Tag,
@@ -129,12 +130,22 @@ def stage_differences(
         [pattern]
     )
 
-    changed_files = [
+    added_files = [
         Path(x.path) for x in filtered_differences.differences
-        if isinstance(x, (FileAddedDifference, FileUpdatedDifference))
+        if isinstance(x, FileAddedDifference)
     ]
 
-    stage_instance = Stage(changed_files)
+    updated_files = [
+        Path(x.path) for x in filtered_differences.differences
+        if isinstance(x, FileUpdatedDifference)
+    ]
+
+    removed_files = [
+        Path(x.path) for x in filtered_differences.differences
+        if isinstance(x, FileRemovedDifference)
+    ]
+
+    stage_instance = Stage(added_files, updated_files, removed_files)
 
     store_stage(path, stage_instance)
 
@@ -246,6 +257,42 @@ def checkout(path: Path, name: str) -> None:
     store_head(path, updated_head_instance)
 
 
+def _list_to_tree(path: Path, paths: List[Path]) -> Directory:
+    result = Directory()
+
+    for item_path in paths:
+        item_path_relative = item_path.relative_to(path)
+
+        path_parts = item_path_relative.as_posix().split("/")
+
+        if len(path_parts) > 1:
+            # recursive lookup
+            # add first segment as key for next directory
+            first_segment = path_parts[0]
+
+            if first_segment not in result.directories.keys():
+                next_path = path.joinpath(first_segment)
+
+                result.directories[first_segment] = _list_to_tree(
+                    next_path,
+                    [
+                        x for x in paths
+                        if x.as_posix().startswith(str(next_path))
+                    ]
+                )
+        else:
+            # path_part is file
+            result.files[str(item_path_relative)] = File(item_path)
+
+    return result
+
+
+def tree_from_list(path: Path, paths: List[Path]) -> Directory:
+    paths_sorted = sorted(paths, key=lambda x: len(str(x).split("/")))
+
+    return _list_to_tree(path, paths_sorted)
+
+
 directory_getters = [
     get_repository_path,
     get_blobs_path,
@@ -305,6 +352,27 @@ if __name__ == "__main__":
 
     initialize(test_directory)
 
+    # get working directory state
+    # try:
+    #     commit_instance = get_commit_from_head(test_directory)
+
+    #     tree_instance = get_tree_from_commit(test_directory, commit_instance)
+    # except FileNotFoundError:
+    #     tree_instance = Directory()
+
+    # working_tree_instance = tree.get_tree(test_directory)
+
+    # differences_instance = tree.compare_trees(
+    #     test_directory,
+    #     working_tree_instance,
+    #     tree_instance
+    # )
+
+    # transform.apply(lambda x: print(x.path), differences_instance.differences)
+
+    # stage_differences(test_directory, differences_instance, "*")
+
+    # commit staged files
     try:
         commit_instance = get_commit_from_head(test_directory)
 
@@ -312,13 +380,21 @@ if __name__ == "__main__":
     except FileNotFoundError:
         tree_instance = Directory()
 
-    working_tree_instance = tree.get_tree(test_directory)
+    stage_instance = get_stage(test_directory)
 
-    differences_instance = tree.compare_trees(
-        working_tree_instance,
-        tree_instance
+    added_files_tree = tree_from_list(
+        test_directory,
+        stage_instance.added_files
     )
 
-    transform.apply(lambda x: print(x.path), differences_instance.differences)
+    updated_files_tree = tree_from_list(
+        test_directory,
+        stage_instance.updated_files
+    )
 
-    # stage_differences(test_directory, differences_instance, "*")
+    removed_files_tree = tree_from_list(
+        test_directory,
+        stage_instance.removed_files
+    )
+
+

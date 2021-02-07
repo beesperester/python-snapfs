@@ -50,7 +50,9 @@ class Tag:
 
 @dataclass
 class Stage:
-    files: List[Path] = field(default_factory=list)
+    added_files: List[Path] = field(default_factory=list)
+    updated_files: List[Path] = field(default_factory=list)
+    removed_files: List[Path] = field(default_factory=list)
 
 
 @dataclass

@@ -92,13 +92,10 @@ def get_tree(
 
 
 def compare_trees(
+    path: Path,
     a: Directory,
-    b: Directory,
-    path: Optional[Path] = None
+    b: Directory
 ) -> Differences:
-    if path is None:
-        path = Path()
-
     differences_instance = Differences()
 
     for key, value in a.directories.items():
@@ -106,18 +103,18 @@ def compare_trees(
             differences_instance = Differences([
                 *differences_instance.differences,
                 *compare_trees(
+                    path.joinpath(key),
                     value,
-                    Directory({}, {}),
-                    path.joinpath(key)
+                    Directory({}, {})
                 ).differences
             ])
         else:
             differences_instance = Differences([
                 *differences_instance.differences,
                 *compare_trees(
+                    path.joinpath(key),
                     value,
-                    b.directories[key],
-                    path.joinpath(key)
+                    b.directories[key]
                 ).differences
             ])
 
