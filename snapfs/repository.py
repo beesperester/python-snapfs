@@ -319,6 +319,6 @@ if __name__ == "__main__":
         tree_instance
     )
 
-    # transform.apply(lambda x: print(x.path), differences_instance.differences)
+    transform.apply(lambda x: print(x.path), differences_instance.differences)
 
-    stage_differences(test_directory, differences_instance, "*")
+    # stage_differences(test_directory, differences_instance, "*")

@@ -80,7 +80,7 @@ def get_tree(
         item_path = Path(os.path.join(current_path, name))
 
         if item_path.is_file():
-            if filters.glob_filter(name, patterns):
+            if filters.patterns_filter(name, patterns):
                 tree.files[name] = File(item_path)
         elif item_path.is_dir():
             result = get_tree(item_path, patterns)

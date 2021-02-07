@@ -4,18 +4,26 @@ from snapfs.datatypes import Differences, Difference
 from typing import List
 
 
-def glob_filter(string: str, patterns: List[str]) -> bool:
+def include_filter(string: str, glob: str) -> bool:
+    if glob.startswith("^"):
+        return not fnmatch.fnmatch(string, glob[1:])
+
+    return fnmatch.fnmatch(string, glob)
+
+
+def exclude_filter(string: str, glob: str) -> bool:
+    return not include_filter(string, glob)
+
+
+def patterns_filter(string: str, patterns: List[str]) -> bool:
     if not patterns:
         return True
 
-    keep = True
+    keep = False
 
     for pattern in patterns:
-        if pattern.startswith("^"):
-            if fnmatch.fnmatch(string, pattern[1:]):
-                keep = True
-        else:
-            keep = not fnmatch.fnmatch(string, pattern)
+        if exclude_filter(string, pattern):
+            keep = True
 
     return keep
 
@@ -25,7 +33,7 @@ def filter_differences(
     patterns: List[str]
 ) -> Differences:
     def filter_difference(difference: Difference) -> bool:
-        return not glob_filter(str(difference.path), patterns)
+        return not patterns_filter(str(difference.path), patterns)
 
     return Differences(list(
         filter(
