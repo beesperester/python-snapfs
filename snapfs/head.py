@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from snapfs import fs, transform
-from snapfs.dataclasses import Head
+from snapfs.datatypes import Head
 
 
 def store_head_as_file(path: Path, head: Head) -> None:

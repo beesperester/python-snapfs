@@ -1,13 +1,13 @@
 from pathlib import Path
 
 from snapfs import fs, transform
-from snapfs.dataclasses import Stage, File
+from snapfs.datatypes import Stage, File
 
 
 def store_stage_as_file(path: Path, stage: Stage) -> None:
     data = transform.as_dict(stage)
 
-    data["files"] = [transform.as_dict(x) for x in stage.files]
+    data["files"] = [str(x) for x in stage.files]
 
     fs.save_data_as_file(path, data, override=True)
 

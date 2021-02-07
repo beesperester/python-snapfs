@@ -5,11 +5,11 @@ from pathlib import Path
 
 from typing import List, Optional
 
-from snapfs import fs, transform, file
-from snapfs.dataclasses import (
+from snapfs import fs, transform, file, filters
+from snapfs.datatypes import (
     File,
     Directory,
-    Difference,
+    Differences,
     FileAddedDifference,
     FileUpdatedDifference,
     FileRemovedDifference
@@ -64,21 +64,6 @@ def serialize_tree(tree: Directory) -> str:
     )
 
 
-def glob_filter(string: str, patterns: List[str]) -> bool:
-    if not patterns:
-        return True
-
-    exclude = [x for x in patterns if not x.startswith("^")]
-    include = [x[1:] for x in list(set(patterns) - set(exclude))]
-
-    keep = not any([fnmatch.fnmatch(string, x) for x in exclude])
-
-    if include:
-        keep = any([fnmatch.fnmatch(string, x) for x in include])
-
-    return keep
-
-
 def get_tree(
     current_path: Path,
     patterns: List[str] = []
@@ -95,7 +80,7 @@ def get_tree(
         item_path = Path(os.path.join(current_path, name))
 
         if item_path.is_file():
-            if glob_filter(name, patterns):
+            if filters.glob_filter(name, patterns):
                 tree.files[name] = File(item_path)
         elif item_path.is_dir():
             result = get_tree(item_path, patterns)
@@ -109,34 +94,39 @@ def get_tree(
 def compare_trees(
     a: Directory,
     b: Directory,
-    differences: List[Difference] = [],
     path: Optional[Path] = None
-) -> None:
+) -> Differences:
     if path is None:
         path = Path()
 
+    differences_instance = Differences()
+
     for key, value in a.directories.items():
         if key not in b.directories.keys():
-            compare_trees(
-                value,
-                Directory({}, {}),
-                differences,
-                path.joinpath(key)
-            )
+            differences_instance = Differences([
+                *differences_instance.differences,
+                *compare_trees(
+                    value,
+                    Directory({}, {}),
+                    path.joinpath(key)
+                ).differences
+            ])
         else:
-            compare_trees(
-                value,
-                b.directories[key],
-                differences,
-                path.joinpath(key)
-            )
+            differences_instance = Differences([
+                *differences_instance.differences,
+                *compare_trees(
+                    value,
+                    b.directories[key],
+                    path.joinpath(key)
+                ).differences
+            ])
 
     # test for added or updated files
     for key, value in a.files.items():
         file_path = path.joinpath(key)
 
         if key not in b.files.keys():
-            differences.append(
+            differences_instance.differences.append(
                 FileAddedDifference(
                     file_path
                 )
@@ -145,7 +135,7 @@ def compare_trees(
             transform.file_to_hashid(value.path)
             != transform.file_to_hashid(b.files[key].path)
         ):
-            differences.append(
+            differences_instance.differences.append(
                 FileUpdatedDifference(
                     file_path
                 )
@@ -156,8 +146,10 @@ def compare_trees(
         file_path = path.joinpath(key)
 
         if key not in a.files.keys():
-            differences.append(
+            differences_instance.differences.append(
                 FileRemovedDifference(
                     file_path
                 )
             )
+
+    return differences_instance

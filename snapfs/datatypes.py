@@ -1,7 +1,8 @@
 from __future__ import annotations
+import dataclasses
 
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List
 
 
@@ -12,8 +13,8 @@ class File:
 
 @dataclass
 class Directory:
-    directories: Dict[str, Directory]
-    files: Dict[str, File]
+    directories: Dict[str, Directory] = field(default_factory=dict)
+    files: Dict[str, File] = field(default_factory=dict)
 
 
 @dataclass
@@ -28,12 +29,12 @@ class Commit:
     author: Author
     message: str
     tree_hashid: str = ""
-    previous_commit_hashid: str = ""
+    previous_commits_hashids: List[str] = field(default_factory=list)
 
 
 @dataclass
 class Head:
-    ref: str
+    ref: str = ""
 
 
 @dataclass
@@ -49,7 +50,7 @@ class Tag:
 
 @dataclass
 class Stage:
-    files: List[File]
+    files: List[Path] = field(default_factory=list)
 
 
 @dataclass
@@ -76,3 +77,8 @@ class FileRemovedDifference(Difference):
     """
     This class represents a file removed message
     """
+
+
+@dataclass
+class Differences:
+    differences: List[Difference] = field(default_factory=list)

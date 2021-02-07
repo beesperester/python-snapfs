@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from snapfs import transform, fs
-from snapfs.dataclasses import Commit, Author
+from snapfs.datatypes import Commit, Author
 
 
 def store_commit_as_blob(directory: Path, commit: Commit) -> str:

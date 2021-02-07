@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from snapfs import transform, fs
-from snapfs.dataclasses import File
+from snapfs.datatypes import File
 
 
 def store_file_as_blob(directory: Path, file: File) -> str:

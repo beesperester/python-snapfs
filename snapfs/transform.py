@@ -36,8 +36,11 @@ def json_to_dict(data: str) -> Dict[str, Any]:
 
 def hashid_to_path(hashid: str, parts: int = 1, length: int = 2) -> str:
     return "/".join(
-        [hashid[i * length:(i * length) + length] for i in range(parts)]
-        + [hashid[parts * length:]]
+        filter(
+            bool,
+            [hashid[i * length:(i * length) + length] for i in range(parts)]
+            + [hashid[parts * length:]]
+        )
     )
 
 
