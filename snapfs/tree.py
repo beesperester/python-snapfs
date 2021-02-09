@@ -3,7 +3,7 @@ import fnmatch
 
 from pathlib import Path
 
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from snapfs import fs, transform, file, filters
 from snapfs.datatypes import (
@@ -12,7 +12,7 @@ from snapfs.datatypes import (
     Differences,
     FileAddedDifference,
     FileUpdatedDifference,
-    FileRemovedDifference
+    FileRemovedDifference,
 )
 
 
@@ -25,7 +25,7 @@ def store_tree_as_blob(directory: Path, tree: Directory) -> str:
         "files": {
             key: file.store_file_as_blob(directory, value)
             for key, value in tree.files.items()
-        }
+        },
     }
 
     return fs.save_data_as_blob(directory, data)
@@ -56,25 +56,62 @@ def serialize_tree(tree: Directory) -> str:
         "files": {
             key: file.serialize_file(value)
             for key, value in tree.files.items()
-        }
+        },
     }
 
-    return transform.string_to_hashid(
-        transform.dict_to_json(data)
-    )
+    return transform.string_to_hashid(transform.dict_to_json(data))
 
 
-def get_tree(
-    current_path: Path,
-    patterns: List[str] = []
-) -> Directory:
+def tree_as_list(path: Path, tree: Directory) -> List[File]:
+    files: List[File] = []
+
+    for key, value in tree.directories.items():
+        files = files + tree_as_list(path.joinpath(key), value)
+
+    files = files + [
+        File(path.joinpath(key), True, value.blob_path, value.hashid)
+        for key, value in tree.files.items()
+    ]
+
+    return files
+
+
+def list_as_tree(path: Path, paths: List[File]) -> Directory:
+    result = Directory()
+
+    for item_instance in paths:
+        item_path_relative = item_instance.path.relative_to(path)
+
+        path_parts = item_path_relative.as_posix().split("/")
+
+        if len(path_parts) > 1:
+            # recursive lookup
+            # add first segment as key for next directory
+            first_segment = path_parts[0]
+
+            if first_segment not in result.directories.keys():
+                next_path = path.joinpath(first_segment)
+
+                result.directories[first_segment] = list_as_tree(
+                    next_path,
+                    [
+                        x
+                        for x in paths
+                        if x.path.as_posix().startswith(str(next_path))
+                    ],
+                )
+        else:
+            # path_part is file
+            result.files[str(item_path_relative)] = item_instance
+
+    return result
+
+
+def get_tree(current_path: Path, patterns: List[str] = []) -> Directory:
     tree = Directory({}, {})
 
     # load ignore pattern
-    patterns = [
-        *patterns,
-        *fs.load_ignore_file(current_path)
-    ]
+    patterns = [*patterns, *fs.load_ignore_file(current_path)]
 
     for name in sorted(list(os.listdir(current_path))):
         item_path = Path(os.path.join(current_path, name))
@@ -91,32 +128,28 @@ def get_tree(
     return tree
 
 
-def compare_trees(
-    path: Path,
-    a: Directory,
-    b: Directory
-) -> Differences:
+def compare_trees(path: Path, a: Directory, b: Directory) -> Differences:
     differences_instance = Differences()
 
     for key, value in a.directories.items():
         if key not in b.directories.keys():
-            differences_instance = Differences([
-                *differences_instance.differences,
-                *compare_trees(
-                    path.joinpath(key),
-                    value,
-                    Directory({}, {})
-                ).differences
-            ])
+            differences_instance = Differences(
+                [
+                    *differences_instance.differences,
+                    *compare_trees(
+                        path.joinpath(key), value, Directory({}, {})
+                    ).differences,
+                ]
+            )
         else:
-            differences_instance = Differences([
-                *differences_instance.differences,
-                *compare_trees(
-                    path.joinpath(key),
-                    value,
-                    b.directories[key]
-                ).differences
-            ])
+            differences_instance = Differences(
+                [
+                    *differences_instance.differences,
+                    *compare_trees(
+                        path.joinpath(key), value, b.directories[key]
+                    ).differences,
+                ]
+            )
 
     # test for added or updated files
     for key, value in a.files.items():
@@ -124,18 +157,13 @@ def compare_trees(
 
         if key not in b.files.keys():
             differences_instance.differences.append(
-                FileAddedDifference(
-                    file_path
-                )
+                FileAddedDifference(File(file_path))
             )
-        elif (
-            transform.file_to_hashid(value.path)
-            != transform.file_to_hashid(b.files[key].path)
+        elif transform.file_to_hashid(value.path) != transform.file_to_hashid(
+            b.files[key].path
         ):
             differences_instance.differences.append(
-                FileUpdatedDifference(
-                    file_path
-                )
+                FileUpdatedDifference(File(file_path))
             )
 
     # test for removed files
@@ -144,9 +172,7 @@ def compare_trees(
 
         if key not in a.files.keys():
             differences_instance.differences.append(
-                FileRemovedDifference(
-                    file_path
-                )
+                FileRemovedDifference(File(file_path))
             )
 
     return differences_instance

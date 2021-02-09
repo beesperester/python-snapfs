@@ -3,12 +3,15 @@ import dataclasses
 
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Union
 
 
 @dataclass
 class File:
     path: Path
+    is_blob: bool = False
+    blob_path: Path = field(default_factory=Path)
+    hashid: str = ""
 
 
 @dataclass
@@ -50,14 +53,14 @@ class Tag:
 
 @dataclass
 class Stage:
-    added_files: List[Path] = field(default_factory=list)
-    updated_files: List[Path] = field(default_factory=list)
-    removed_files: List[Path] = field(default_factory=list)
+    added_files: List[File] = field(default_factory=list)
+    updated_files: List[File] = field(default_factory=list)
+    removed_files: List[File] = field(default_factory=list)
 
 
 @dataclass
 class Difference:
-    path: Path
+    file: File
 
 
 @dataclass

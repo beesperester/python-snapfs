@@ -29,15 +29,11 @@ def patterns_filter(string: str, patterns: List[str]) -> bool:
 
 
 def filter_differences(
-    differences: Differences,
-    patterns: List[str]
+    differences: Differences, patterns: List[str]
 ) -> Differences:
     def filter_difference(difference: Difference) -> bool:
-        return not patterns_filter(str(difference.path), patterns)
+        return not patterns_filter(str(difference.file.path), patterns)
 
-    return Differences(list(
-        filter(
-            filter_difference,
-            differences.differences
-        )
-    ))
+    return Differences(
+        list(filter(filter_difference, differences.differences))
+    )

@@ -11,7 +11,7 @@ from snapfs import (
     stage,
     commit,
     tree,
-    filters
+    filters,
 )
 from snapfs.datatypes import (
     Branch,
@@ -25,7 +25,7 @@ from snapfs.datatypes import (
     Stage,
     Tag,
     Differences,
-    File
+    File,
 )
 
 
@@ -121,27 +121,25 @@ def store_stage(path: Path, stage_instance: Stage) -> None:
 
 
 def stage_differences(
-    path: Path,
-    differences: Differences,
-    pattern: str
+    path: Path, differences: Differences, pattern: str
 ) -> None:
-    filtered_differences = filters.filter_differences(
-        differences,
-        [pattern]
-    )
+    filtered_differences = filters.filter_differences(differences, [pattern])
 
     added_files = [
-        Path(x.path) for x in filtered_differences.differences
+        x.file
+        for x in filtered_differences.differences
         if isinstance(x, FileAddedDifference)
     ]
 
     updated_files = [
-        Path(x.path) for x in filtered_differences.differences
+        x.file
+        for x in filtered_differences.differences
         if isinstance(x, FileUpdatedDifference)
     ]
 
     removed_files = [
-        Path(x.path) for x in filtered_differences.differences
+        x.file
+        for x in filtered_differences.differences
         if isinstance(x, FileRemovedDifference)
     ]
 
@@ -216,10 +214,7 @@ def get_commit_from_head(path: Path) -> Commit:
 
 
 def get_tree_from_commit(path: Path, commit: Commit) -> Directory:
-    return tree.load_blob_as_tree(
-        get_blobs_path(path),
-        commit.tree_hashid
-    )
+    return tree.load_blob_as_tree(get_blobs_path(path), commit.tree_hashid)
 
 
 def checkout(path: Path, name: str) -> None:
@@ -243,10 +238,7 @@ def checkout(path: Path, name: str) -> None:
 
         branch_instance = Branch(commit_hashid)
 
-        references.store_branch_as_file(
-            branch_path,
-            branch_instance
-        )
+        references.store_branch_as_file(branch_path, branch_instance)
 
         reference = str(branch_path.relative_to(get_repository_path(path)))
 
@@ -276,9 +268,10 @@ def _list_to_tree(path: Path, paths: List[Path]) -> Directory:
                 result.directories[first_segment] = _list_to_tree(
                     next_path,
                     [
-                        x for x in paths
+                        x
+                        for x in paths
                         if x.as_posix().startswith(str(next_path))
-                    ]
+                    ],
                 )
         else:
             # path_part is file
@@ -301,10 +294,7 @@ directory_getters = [
     get_tags_path,
 ]
 
-file_getterrs = [
-    get_stage_path,
-    get_head_path
-]
+file_getterrs = [get_stage_path, get_head_path]
 
 
 def is_initialized(path: Path) -> bool:
@@ -317,10 +307,7 @@ def is_initialized(path: Path) -> bool:
 
         return True
     except (FileNotFoundError, DirectoryNotFoundError) as e:
-        print("{}: '{}'".format(
-            e.__class__.__name__,
-            e
-        ))
+        print("{}: '{}'".format(e.__class__.__name__, e))
 
         return False
 
@@ -329,8 +316,7 @@ def initialize(path: Path) -> None:
     if not is_initialized(path):
         # create directories
         transform.apply(
-            lambda x: fs.make_dirs(x(path, False)),
-            directory_getters
+            lambda x: fs.make_dirs(x(path, False)), directory_getters
         )
 
         # create new stage
@@ -345,6 +331,40 @@ def initialize(path: Path) -> None:
 
         # checkout main branch
         checkout(path, "main")
+
+
+def apply_additive_changes(
+    path: Path, tree_list: List[File], changes: List[File]
+) -> List[File]:
+    result: List[File] = [*tree_list]
+
+    existing_file_paths = [str(x.path) for x in tree_list]
+
+    for file_instance in changes:
+        file_path = str(file_instance.path)
+
+        if file_path not in existing_file_paths:
+            result.append(file_instance)
+        else:
+            result[existing_file_paths.index(file_path)] = file_instance
+
+    return result
+
+
+def apply_subtractive_changes(
+    path: Path, tree_list: List[File], changes: List[File]
+) -> List[File]:
+    result: List[File] = [*tree_list]
+
+    existing_file_paths = [str(x.path) for x in tree_list]
+
+    for file_instance in changes:
+        file_path = str(file_instance.path)
+
+        if file_path in existing_file_paths:
+            del result[existing_file_paths.index(file_path)]
+
+    return result
 
 
 if __name__ == "__main__":
@@ -363,12 +383,10 @@ if __name__ == "__main__":
     # working_tree_instance = tree.get_tree(test_directory)
 
     # differences_instance = tree.compare_trees(
-    #     test_directory,
-    #     working_tree_instance,
-    #     tree_instance
+    #     test_directory, working_tree_instance, tree_instance
     # )
 
-    # transform.apply(lambda x: print(x.path), differences_instance.differences)
+    # transform.apply(lambda x: print(x.file), differences_instance.differences)
 
     # stage_differences(test_directory, differences_instance, "*")
 
@@ -382,19 +400,63 @@ if __name__ == "__main__":
 
     stage_instance = get_stage(test_directory)
 
-    added_files_tree = tree_from_list(
+    tree_list = tree.tree_as_list(test_directory, tree_instance)
+
+    updated_tree_list = apply_additive_changes(
         test_directory,
-        stage_instance.added_files
+        tree_list,
+        stage_instance.added_files + stage_instance.updated_files,
     )
 
-    updated_files_tree = tree_from_list(
-        test_directory,
-        stage_instance.updated_files
+    test_paths = [
+        # File(
+        #     Path(
+        #         "/Users/bernhardesperester/git/python-snapfs/.data/test/setup-cinema4d/model_main_v146.c4d"
+        #     )
+        # )
+    ]
+
+    updated_tree_list = apply_subtractive_changes(
+        test_directory, updated_tree_list, test_paths
     )
 
-    removed_files_tree = tree_from_list(
-        test_directory,
-        stage_instance.removed_files
-    )
+    commit_tree = tree.list_as_tree(test_directory, updated_tree_list)
 
+    print(commit_tree.directories["setup-cinema4d"].files)
 
+    # transform.apply(print, updated_tree_list)
+
+    # print("before")
+    # transform.apply(print, tree.tree_as_list(test_directory, tree_instance))
+
+    # apply_added_files_changes(
+    #     test_directory,
+    #     tree_instance,
+    #     stage_instance.added_files + stage_instance.updated_files,
+    # )
+
+    # test_paths = [
+    #     Path(
+    #         "/Users/bernhardesperester/git/python-snapfs/.data/test/setup-cinema4d/model_main_v146.c4d"
+    #     )
+    # ]
+
+    # apply_removed_files_changes(test_directory, tree_instance, test_paths)
+
+    # print("after")
+    # transform.apply(print, tree.tree_as_list(test_directory, tree_instance))
+
+    # added_files_tree = tree_from_list(
+    #     test_directory,
+    #     stage_instance.added_files
+    # )
+
+    # updated_files_tree = tree_from_list(
+    #     test_directory,
+    #     stage_instance.updated_files
+    # )
+
+    # removed_files_tree = tree_from_list(
+    #     test_directory,
+    #     stage_instance.removed_files
+    # )
