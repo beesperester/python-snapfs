@@ -14,6 +14,7 @@ from snapfs import (
     filters,
 )
 from snapfs.datatypes import (
+    Author,
     Branch,
     Commit,
     Difference,
@@ -188,6 +189,16 @@ def branch_name_from_ref(ref: str) -> str:
     return ref.split("/").pop()
 
 
+def get_active_branch(path: Path) -> str:
+    head = get_head(path)
+
+    if head.ref.startswith("references/branches"):
+        # reference is branch
+        return branch_name_from_ref(head.ref)
+
+    raise Exception("Unable to get active branch")
+
+
 def get_commit_hashid_from_head(path: Path) -> str:
     hashid = ""
 
@@ -249,41 +260,22 @@ def checkout(path: Path, name: str) -> None:
     store_head(path, updated_head_instance)
 
 
-def _list_to_tree(path: Path, paths: List[Path]) -> Directory:
-    result = Directory()
+def create_commit(
+    path: Path, author: Author, message: str, tree_instance: Directory
+):
+    tree_hashid = tree.store_tree_as_blob(get_blobs_path(path), tree_instance)
 
-    for item_path in paths:
-        item_path_relative = item_path.relative_to(path)
+    commit_instance = Commit(author, message, tree_hashid)
 
-        path_parts = item_path_relative.as_posix().split("/")
+    commit_hashid = commit.store_commit_as_blob(
+        get_blobs_path(path), commit_instance
+    )
 
-        if len(path_parts) > 1:
-            # recursive lookup
-            # add first segment as key for next directory
-            first_segment = path_parts[0]
+    branch_instance = Branch(commit_hashid)
 
-            if first_segment not in result.directories.keys():
-                next_path = path.joinpath(first_segment)
-
-                result.directories[first_segment] = _list_to_tree(
-                    next_path,
-                    [
-                        x
-                        for x in paths
-                        if x.as_posix().startswith(str(next_path))
-                    ],
-                )
-        else:
-            # path_part is file
-            result.files[str(item_path_relative)] = File(item_path)
-
-    return result
-
-
-def tree_from_list(path: Path, paths: List[Path]) -> Directory:
-    paths_sorted = sorted(paths, key=lambda x: len(str(x).split("/")))
-
-    return _list_to_tree(path, paths_sorted)
+    references.store_branch_as_file(
+        get_branch_path(path, get_active_branch(path)), branch_instance
+    )
 
 
 directory_getters = [
@@ -408,21 +400,19 @@ if __name__ == "__main__":
         stage_instance.added_files + stage_instance.updated_files,
     )
 
-    test_paths = [
-        # File(
-        #     Path(
-        #         "/Users/bernhardesperester/git/python-snapfs/.data/test/setup-cinema4d/model_main_v146.c4d"
-        #     )
-        # )
-    ]
-
     updated_tree_list = apply_subtractive_changes(
-        test_directory, updated_tree_list, test_paths
+        test_directory, updated_tree_list, stage_instance.removed_files
     )
 
     commit_tree = tree.list_as_tree(test_directory, updated_tree_list)
 
-    print(commit_tree.directories["setup-cinema4d"].files)
+    author_instance = Author(
+        "beesperester", "Bernhard Esperester", "bernhard@esperester.de"
+    )
+
+    create_commit(
+        test_directory, author_instance, "initial commit", commit_tree
+    )
 
     # transform.apply(print, updated_tree_list)
 
