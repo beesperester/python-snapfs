@@ -6,6 +6,11 @@ from snapfs.datatypes import File
 
 
 def store_file_as_blob(directory: Path, file: File) -> str:
+    if file.is_blob:
+        # if file has been loaded as blob simply
+        # return the associated hashid
+        return file.hashid
+
     return fs.copy_file_as_blob(directory, file.path)
 
 
@@ -21,6 +26,11 @@ def load_blob_as_file(
 
 
 def serialize_file(file: File) -> str:
+    if file.is_blob:
+        # if file has been loaded as blob simply
+        # return the associated hashid
+        return file.hashid
+
     return transform.file_to_hashid(file.path)
 
 
@@ -28,6 +38,7 @@ def file_as_dict(file: File) -> Dict[str, Any]:
     data = transform.as_dict(file)
 
     data["path"] = str(file.path)
+    data["blob_path"] = str(file.blob_path)
 
     return data
 

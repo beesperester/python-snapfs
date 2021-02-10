@@ -1,7 +1,7 @@
 import os
 
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from snapfs import (
     references,
@@ -261,11 +261,20 @@ def checkout(path: Path, name: str) -> None:
 
 
 def create_commit(
-    path: Path, author: Author, message: str, tree_instance: Directory
+    path: Path,
+    author: Author,
+    message: str,
+    tree_instance: Directory,
+    previous_commits_hashids: Optional[List[str]] = None,
 ):
+    if previous_commits_hashids is None:
+        previous_commits_hashids = []
+
     tree_hashid = tree.store_tree_as_blob(get_blobs_path(path), tree_instance)
 
-    commit_instance = Commit(author, message, tree_hashid)
+    commit_instance = Commit(
+        author, message, tree_hashid, previous_commits_hashids
+    )
 
     commit_hashid = commit.store_commit_as_blob(
         get_blobs_path(path), commit_instance
@@ -384,10 +393,12 @@ if __name__ == "__main__":
 
     # commit staged files
     try:
+        commit_hashid = get_commit_hashid_from_head(test_directory)
         commit_instance = get_commit_from_head(test_directory)
 
         tree_instance = get_tree_from_commit(test_directory, commit_instance)
     except FileNotFoundError:
+        commit_hashid = ""
         tree_instance = Directory()
 
     stage_instance = get_stage(test_directory)
@@ -410,8 +421,17 @@ if __name__ == "__main__":
         "beesperester", "Bernhard Esperester", "bernhard@esperester.de"
     )
 
+    previous_commits_hashids = []
+
+    if commit_hashid:
+        previous_commits_hashids.append(commit_hashid)
+
     create_commit(
-        test_directory, author_instance, "initial commit", commit_tree
+        test_directory,
+        author_instance,
+        "initial commit",
+        commit_tree,
+        previous_commits_hashids,
     )
 
     # transform.apply(print, updated_tree_list)
