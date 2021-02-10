@@ -19,11 +19,13 @@ def patterns_filter(string: str, patterns: List[str]) -> bool:
     if not patterns:
         return True
 
-    keep = False
+    keep = True
 
     for pattern in patterns:
-        if exclude_filter(string, pattern):
-            keep = True
+        if not include_filter(string, pattern):
+            return True
+        else:
+            keep = False
 
     return keep
 
@@ -37,3 +39,17 @@ def filter_differences(
     return Differences(
         list(filter(filter_difference, differences.differences))
     )
+
+
+def ignore(string: str, patterns: List[str]) -> bool:
+    result = False
+
+    for pattern in patterns:
+        if pattern.startswith("^"):
+            if fnmatch.fnmatch(string, pattern[1:]):
+                result = False
+        else:
+            if fnmatch.fnmatch(string, pattern):
+                result = not result
+
+    return result
