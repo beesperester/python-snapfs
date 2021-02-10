@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import re
 
-from typing import Dict, Any, Callable, Sequence, TypeVar
+from typing import BinaryIO, Dict, Any, Callable, Sequence, TypeVar
 from hashlib import sha256
 from pathlib import Path
 
@@ -16,7 +16,7 @@ def apply(callback: Callable[[T], Any], values: Sequence[T]) -> None:
         callback(value)
 
 
-def as_dict(instance: object) -> dict:
+def as_dict(instance: object) -> Dict[str, Any]:
     return instance.__dict__
 
 
@@ -38,8 +38,11 @@ def hashid_to_path(hashid: str, parts: int = 1, length: int = 2) -> str:
     return "/".join(
         filter(
             bool,
-            [hashid[i * length:(i * length) + length] for i in range(parts)]
-            + [hashid[parts * length:]]
+            [
+                hashid[(i * length) : (i * length) + length]
+                for i in range(parts)
+            ]
+            + [hashid[(parts * length) :]],
         )
     )
 
@@ -53,8 +56,6 @@ def string_to_hashid(string: str) -> str:
 
 
 def file_to_hashid(path: Path) -> str:
-    assert path.is_file()
-
     sha256_hash = sha256()
 
     with open(str(path), "rb") as f:
@@ -63,3 +64,14 @@ def file_to_hashid(path: Path) -> str:
             sha256_hash.update(byte_block)
 
     return sha256_hash.hexdigest()
+
+
+def bytes_to_hashid(buffer: bytes) -> str:
+    sha256_hash = sha256()
+    sha256_hash.update(buffer)
+
+    return sha256_hash.hexdigest()
+
+
+if __name__ == "__main__":
+    print(bytes_to_hashid(bytes(b"hello world")))

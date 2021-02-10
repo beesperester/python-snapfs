@@ -1,5 +1,4 @@
 import unittest
-import fnmatch
 
 from typing import List
 

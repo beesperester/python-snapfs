@@ -25,7 +25,7 @@ def load_blob_as_file(
     return File(real_path, True, hashid_path, hashid)
 
 
-def serialize_file(file: File) -> str:
+def serialize_file_as_hashid(file: File) -> str:
     if file.is_blob:
         # if file has been loaded as blob simply
         # return the associated hashid
@@ -34,14 +34,17 @@ def serialize_file(file: File) -> str:
     return transform.file_to_hashid(file.path)
 
 
-def file_as_dict(file: File) -> Dict[str, Any]:
+def serialize_file_as_dict(file: File) -> Dict[str, Any]:
     data = transform.as_dict(file)
 
-    data["path"] = str(file.path)
-    data["blob_path"] = str(file.blob_path)
+    data = {
+        **data,
+        "path": str(file.path),
+        "blob_path": str(file.blob_path) if file.blob_path else None,
+    }
 
     return data
 
 
-def file_from_dict(data: Dict[str, Any]) -> File:
+def deserialize_dict_as_file(data: Dict[str, Any]) -> File:
     return File(Path(data["path"]))

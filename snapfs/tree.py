@@ -54,7 +54,7 @@ def serialize_tree(tree: Directory) -> str:
             for key, value in tree.directories.items()
         },
         "files": {
-            key: file.serialize_file(value)
+            key: file.serialize_file_as_hashid(value)
             for key, value in tree.files.items()
         },
     }

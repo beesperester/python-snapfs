@@ -3,14 +3,14 @@ import dataclasses
 
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 
 @dataclass
 class File:
     path: Path
     is_blob: bool = False
-    blob_path: Path = field(default_factory=Path)
+    blob_path: Optional[Path] = None
     hashid: str = ""
 
 
