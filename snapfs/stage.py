@@ -1,25 +1,43 @@
 from pathlib import Path
+from typing import Any, Dict
 
 from snapfs import fs, transform, file
 from snapfs.datatypes import Stage, File
 
 
 def store_stage_as_file(path: Path, stage: Stage) -> None:
+    fs.save_dict_as_file(path, serialize_stage_as_dict(stage), override=True)
+
+
+def serialize_stage_as_dict(stage: Stage) -> Dict[str, Any]:
     data = transform.as_dict(stage)
 
-    data["added_files"] = [file.serialize_file_as_dict(x) for x in stage.added_files]
+    return {
+        **data,
+        "added_files": [
+            file.serialize_file_as_dict(x) for x in stage.added_files
+        ],
+        "updated_files": [
+            file.serialize_file_as_dict(x) for x in stage.updated_files
+        ],
+        "removed_files": [
+            file.serialize_file_as_dict(x) for x in stage.removed_files
+        ],
+    }
 
-    data["updated_files"] = [file.serialize_file_as_dict(x) for x in stage.updated_files]
-
-    data["removed_files"] = [file.serialize_file_as_dict(x) for x in stage.removed_files]
-
-    fs.save_data_as_file(path, data, override=True)
+def deserialize_dict_as_stage(data: Dict[str, Any]) -> Stage:
+    return {
+        **data,
+        
+    }
 
 
 def load_file_as_stage(path: Path) -> Stage:
-    data = fs.load_file_as_data(path)
+    data = fs.load_file_as_dict(path)
 
-    data["added_files"] = [file.deserialize_dict_as_file(x) for x in data["added_files"]]
+    data["added_files"] = [
+        file.deserialize_dict_as_file(x) for x in data["added_files"]
+    ]
 
     data["updated_files"] = [
         file.deserialize_dict_as_file(x) for x in data["updated_files"]

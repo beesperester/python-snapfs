@@ -11,11 +11,7 @@ def make_dirs(path: Path):
     path.mkdir(0o774, True, True)
 
 
-def save_file(
-    file_path: Path,
-    content: str,
-    override: bool = False
-) -> None:
+def save_file(file_path: Path, content: str, override: bool = False) -> None:
     if file_path.is_file() and override:
         # make file writeable
         file_path.chmod(stat.S_IWRITE | stat.S_IWGRP | stat.S_IROTH)
@@ -30,18 +26,13 @@ def save_file(
         file_path.chmod(stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH)
 
 
-def save_data_as_file(
-    file_path: Path,
-    data: Dict[str, Any],
-    override: bool = False
+def save_dict_as_file(
+    file_path: Path, data: Dict[str, Any], override: bool = False
 ) -> None:
     save_file(file_path, transform.dict_to_json(data), override)
 
 
-def save_data_as_blob(
-    directory: Path,
-    data: Dict[str, Any]
-) -> str:
+def save_dict_as_blob(directory: Path, data: Dict[str, Any]) -> str:
     contents = transform.dict_to_json(data)
 
     hashid = transform.string_to_hashid(contents)
@@ -62,19 +53,19 @@ def load_file(file_path: Path) -> str:
     return data
 
 
-def load_file_as_data(file_path: Path) -> Dict[str, Any]:
+def load_file_as_dict(file_path: Path) -> Dict[str, Any]:
     return transform.json_to_dict(load_file(file_path))
 
 
-def load_blob_as_data(directory: Path, hashid: str) -> Dict[str, Any]:
-    hashid_path = directory.joinpath(
-        transform.hashid_to_path(hashid)
-    )
+def load_blob_as_dict(directory: Path, hashid: str) -> Dict[str, Any]:
+    hashid_path = directory.joinpath(transform.hashid_to_path(hashid))
 
-    return load_file_as_data(hashid_path)
+    return load_file_as_dict(hashid_path)
 
 
 def copy_file(source: Path, target: Path) -> None:
+    make_dirs(target.parent)
+
     shutil.copyfile(source, target)
 
 
@@ -105,9 +96,10 @@ def load_ignore_file(directory: Path) -> List[str]:
             filter(
                 bool,
                 [
-                    x.strip() for x in contents.split("\n")
+                    x.strip()
+                    for x in contents.split("\n")
                     if not x.startswith("#")
-                ]
+                ],
             )
         )
 

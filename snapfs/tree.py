@@ -28,11 +28,11 @@ def store_tree_as_blob(directory: Path, tree: Directory) -> str:
         },
     }
 
-    return fs.save_data_as_blob(directory, data)
+    return fs.save_dict_as_blob(directory, data)
 
 
 def load_blob_as_tree(directory: Path, hashid: str) -> Directory:
-    data = fs.load_blob_as_data(directory, hashid)
+    data = fs.load_blob_as_dict(directory, hashid)
 
     data["directories"] = {
         key: load_blob_as_tree(directory, value)
