@@ -25,7 +25,7 @@ class TestHeadModule(unittest.TestCase):
         data = {"ref": ""}
 
         result = ""
-        expected_result = transform.dict_to_json(data)
+        expected_result = transform.dict_as_json(data)
 
         head_instance = Head()
 

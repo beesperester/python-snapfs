@@ -38,8 +38,8 @@ class TestCommitModule(unittest.TestCase):
 
         self.assertEqual(
             commit_hashid,
-            transform.string_to_hashid(
-                transform.dict_to_json(expected_result)
+            transform.string_as_hashid(
+                transform.dict_as_json(expected_result)
             ),
         )
 
@@ -53,7 +53,7 @@ class TestCommitModule(unittest.TestCase):
 
             commit_dict = commit.load_blob_as_commit(
                 Path(tmpdirname).joinpath(
-                    transform.hashid_to_path(commit_hashid)
+                    transform.hashid_as_path(commit_hashid)
                 )
             )
 

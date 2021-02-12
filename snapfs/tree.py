@@ -59,7 +59,7 @@ def serialize_tree(tree: Directory) -> str:
         },
     }
 
-    return transform.string_to_hashid(transform.dict_to_json(data))
+    return transform.string_as_hashid(transform.dict_as_json(data))
 
 
 def tree_as_list(path: Path, tree: Directory) -> List[File]:
@@ -159,7 +159,7 @@ def compare_trees(path: Path, a: Directory, b: Directory) -> Differences:
             differences_instance.differences.append(
                 FileAddedDifference(File(file_path))
             )
-        elif transform.file_to_hashid(value.path) != transform.file_to_hashid(
+        elif transform.file_as_hashid(value.path) != transform.file_as_hashid(
             b.files[key].path
         ):
             differences_instance.differences.append(

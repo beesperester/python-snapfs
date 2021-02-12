@@ -27,7 +27,7 @@ class TestReferencesModule(unittest.TestCase):
         data = {"commit_hashid": ""}
 
         result = ""
-        expected_result = transform.dict_to_json(data)
+        expected_result = transform.dict_as_json(data)
 
         references.store_branch_as_file(file_path, branch_instance)
 

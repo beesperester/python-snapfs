@@ -25,26 +25,23 @@ def serialize_stage_as_dict(stage: Stage) -> Dict[str, Any]:
         ],
     }
 
+
 def deserialize_dict_as_stage(data: Dict[str, Any]) -> Stage:
-    return {
-        **data,
-        
-    }
+    return Stage(
+        **{
+            **data,
+            "added_files": [
+                file.deserialize_dict_as_file(x) for x in data["added_files"]
+            ],
+            "updated_files": [
+                file.deserialize_dict_as_file(x) for x in data["updated_files"]
+            ],
+            "removed_files": [
+                file.deserialize_dict_as_file(x) for x in data["removed_files"]
+            ],
+        }
+    )
 
 
 def load_file_as_stage(path: Path) -> Stage:
-    data = fs.load_file_as_dict(path)
-
-    data["added_files"] = [
-        file.deserialize_dict_as_file(x) for x in data["added_files"]
-    ]
-
-    data["updated_files"] = [
-        file.deserialize_dict_as_file(x) for x in data["updated_files"]
-    ]
-
-    data["removed_files"] = [
-        file.deserialize_dict_as_file(x) for x in data["removed_files"]
-    ]
-
-    return Stage(**data)
+    return deserialize_dict_as_stage(fs.load_file_as_dict(path))

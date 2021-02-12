@@ -60,8 +60,8 @@ class TestFSModule(unittest.TestCase):
         data = {"hello": "world"}
 
         result = ""
-        expected_result = transform.string_to_hashid(
-            transform.dict_to_json(data)
+        expected_result = transform.string_as_hashid(
+            transform.dict_as_json(data)
         )
         with tempfile.TemporaryDirectory() as tmpdirname:
             result = fs.save_dict_as_blob(Path(tmpdirname), data)
@@ -90,7 +90,7 @@ class TestFSModule(unittest.TestCase):
         file_path = get_named_tmpfile_path()
 
         with open(file_path, "w") as f:
-            f.write(transform.dict_to_json(data))
+            f.write(transform.dict_as_json(data))
 
         result = fs.load_file_as_dict(file_path)
 
@@ -122,7 +122,7 @@ class TestFSModule(unittest.TestCase):
     def test_copy_file_as_blob(self):
         data = b"hello world"
 
-        expected_result = transform.bytes_to_hashid(data)
+        expected_result = transform.bytes_as_hashid(data)
 
         source_file_path = get_named_tmpfile_path()
 

@@ -17,7 +17,7 @@ def store_file_as_blob(directory: Path, file: File) -> str:
 def load_blob_as_file(
     directory: Path, hashid: str, real_path: Optional[Path] = None
 ) -> File:
-    hashid_path = directory.joinpath(transform.hashid_to_path(hashid))
+    hashid_path = directory.joinpath(transform.hashid_as_path(hashid))
 
     if real_path is None:
         real_path = hashid_path
@@ -31,7 +31,7 @@ def serialize_file_as_hashid(file: File) -> str:
         # return the associated hashid
         return file.hashid
 
-    return transform.file_to_hashid(file.path)
+    return transform.file_as_hashid(file.path)
 
 
 def serialize_file_as_dict(file: File) -> Dict[str, Any]:

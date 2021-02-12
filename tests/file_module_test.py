@@ -35,7 +35,7 @@ class TestCommitModule(unittest.TestCase):
     def test_serialize_file_as_hashid(self):
         self.assertEqual(
             file.serialize_file_as_hashid(file_instance),
-            transform.bytes_to_hashid(file_contents),
+            transform.bytes_as_hashid(file_contents),
         )
 
     def test_serialize_file_as_dict(self):
@@ -58,7 +58,7 @@ class TestCommitModule(unittest.TestCase):
 
         self.assertEqual(
             file_hashid,
-            transform.bytes_to_hashid(file_contents),
+            transform.bytes_as_hashid(file_contents),
         )
 
     def test_load_blob_as_file(self):
@@ -74,7 +74,7 @@ class TestCommitModule(unittest.TestCase):
             )
 
         blob_path = Path(tmpdirname).joinpath(
-            transform.hashid_to_path(file_hashid)
+            transform.hashid_as_path(file_hashid)
         )
 
         expected_result_file_instance = File(

@@ -172,7 +172,7 @@ def get_branch(path: Path, name: str) -> Branch:
 
 def get_commit_path(path: Path, hashid: str, test: bool = True) -> Path:
     commit_path = get_blobs_path(path).joinpath(
-        transform.hashid_to_path(hashid)
+        transform.hashid_as_path(hashid)
     )
 
     if test and not commit_path.is_file():

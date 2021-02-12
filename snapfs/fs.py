@@ -29,15 +29,15 @@ def save_file(file_path: Path, content: str, override: bool = False) -> None:
 def save_dict_as_file(
     file_path: Path, data: Dict[str, Any], override: bool = False
 ) -> None:
-    save_file(file_path, transform.dict_to_json(data), override)
+    save_file(file_path, transform.dict_as_json(data), override)
 
 
 def save_dict_as_blob(directory: Path, data: Dict[str, Any]) -> str:
-    contents = transform.dict_to_json(data)
+    contents = transform.dict_as_json(data)
 
-    hashid = transform.string_to_hashid(contents)
+    hashid = transform.string_as_hashid(contents)
 
-    hashid_path = directory.joinpath(transform.hashid_to_path(hashid))
+    hashid_path = directory.joinpath(transform.hashid_as_path(hashid))
 
     save_file(hashid_path, contents)
 
@@ -54,11 +54,11 @@ def load_file(file_path: Path) -> str:
 
 
 def load_file_as_dict(file_path: Path) -> Dict[str, Any]:
-    return transform.json_to_dict(load_file(file_path))
+    return transform.json_as_dict(load_file(file_path))
 
 
 def load_blob_as_dict(directory: Path, hashid: str) -> Dict[str, Any]:
-    hashid_path = directory.joinpath(transform.hashid_to_path(hashid))
+    hashid_path = directory.joinpath(transform.hashid_as_path(hashid))
 
     return load_file_as_dict(hashid_path)
 
@@ -70,9 +70,9 @@ def copy_file(source: Path, target: Path) -> None:
 
 
 def copy_file_as_blob(directory: Path, source: Path) -> str:
-    hashid = transform.file_to_hashid(source)
+    hashid = transform.file_as_hashid(source)
 
-    hashid_path = directory.joinpath(transform.hashid_to_path(hashid))
+    hashid_path = directory.joinpath(transform.hashid_as_path(hashid))
 
     if not hashid_path.is_file():
         make_dirs(hashid_path.parent)

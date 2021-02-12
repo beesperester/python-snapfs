@@ -26,15 +26,15 @@ def slug(string: str) -> str:
     return "".join(list(matches))
 
 
-def dict_to_json(data: Dict[str, Any]) -> str:
+def dict_as_json(data: Dict[str, Any]) -> str:
     return json.dumps(data, indent=2, sort_keys=True)
 
 
-def json_to_dict(data: str) -> Dict[str, Any]:
+def json_as_dict(data: str) -> Dict[str, Any]:
     return json.loads(data)
 
 
-def hashid_to_path(hashid: str, parts: int = 1, length: int = 2) -> str:
+def hashid_as_path(hashid: str, parts: int = 1, length: int = 2) -> str:
     return "/".join(
         filter(
             bool,
@@ -47,7 +47,7 @@ def hashid_to_path(hashid: str, parts: int = 1, length: int = 2) -> str:
     )
 
 
-def string_to_hashid(string: str) -> str:
+def string_as_hashid(string: str) -> str:
     sha256_hash = sha256()
 
     sha256_hash.update(string.encode("utf-8"))
@@ -55,7 +55,7 @@ def string_to_hashid(string: str) -> str:
     return sha256_hash.hexdigest()
 
 
-def file_to_hashid(path: Path) -> str:
+def file_as_hashid(path: Path) -> str:
     sha256_hash = sha256()
 
     with open(str(path), "rb") as f:
@@ -66,12 +66,8 @@ def file_to_hashid(path: Path) -> str:
     return sha256_hash.hexdigest()
 
 
-def bytes_to_hashid(buffer: bytes) -> str:
+def bytes_as_hashid(buffer: bytes) -> str:
     sha256_hash = sha256()
     sha256_hash.update(buffer)
 
     return sha256_hash.hexdigest()
-
-
-if __name__ == "__main__":
-    print(bytes_to_hashid(bytes(b"hello world")))
