@@ -3,7 +3,7 @@ import fnmatch
 
 from pathlib import Path
 
-from typing import List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple
 
 from snapfs import fs, transform, file, filters
 from snapfs.datatypes import (
@@ -47,10 +47,10 @@ def load_blob_as_tree(directory: Path, hashid: str) -> Directory:
     return Directory(**data)
 
 
-def serialize_tree(tree: Directory) -> str:
+def serialize_tree_as_hashid(tree: Directory) -> str:
     data = {
         "directories": {
-            key: serialize_tree(value)
+            key: serialize_tree_as_hashid(value)
             for key, value in tree.directories.items()
         },
         "files": {
@@ -59,7 +59,21 @@ def serialize_tree(tree: Directory) -> str:
         },
     }
 
-    return transform.string_as_hashid(transform.dict_as_json(data))
+    return transform.dict_as_hashid(data)
+
+
+def serialize_tree_as_dict(tree: Directory) -> Dict[str, Any]:
+    return {
+        **transform.as_dict(tree),
+        "directories": {
+            key: serialize_tree_as_dict(value)
+            for key, value in tree.directories.items()
+        },
+        "files": {
+            key: file.serialize_file_as_dict(value)
+            for key, value in tree.files.items()
+        },
+    }
 
 
 def tree_as_list(path: Path, tree: Directory) -> List[File]:
@@ -69,7 +83,7 @@ def tree_as_list(path: Path, tree: Directory) -> List[File]:
         files = files + tree_as_list(path.joinpath(key), value)
 
     files = files + [
-        File(path.joinpath(key), True, value.blob_path, value.hashid)
+        File(path.joinpath(key), value.is_blob, value.blob_path, value.hashid)
         for key, value in tree.files.items()
     ]
 

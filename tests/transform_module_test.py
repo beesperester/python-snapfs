@@ -77,6 +77,16 @@ class TestTransformModule(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
+    def test_dict_as_hashid(self):
+        data = {"foo": "bar"}
+
+        expected_result = (
+            "bbe8e9a86be651f9efc8e8df7fb76999d8e9a4a9674df9be8de24f4fb3d872a2"
+        )
+        result = transform.dict_as_hashid(data)
+
+        self.assertEqual(result, expected_result)
+
     def test_file_as_hashid(self):
         data = b"this is some binary content"
         file_path = get_named_tmpfile_path()

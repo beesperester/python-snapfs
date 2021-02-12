@@ -55,6 +55,10 @@ def string_as_hashid(string: str) -> str:
     return sha256_hash.hexdigest()
 
 
+def dict_as_hashid(data: Dict[str, Any]) -> str:
+    return string_as_hashid(dict_as_json(data))
+
+
 def file_as_hashid(path: Path) -> str:
     sha256_hash = sha256()
 
