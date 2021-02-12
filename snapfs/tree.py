@@ -28,7 +28,7 @@ def store_tree_as_blob(directory: Path, tree: Directory) -> str:
         },
     }
 
-    return fs.save_dict_as_blob(directory, data)
+    return fs.store_dict_as_blob(directory, data)
 
 
 def load_blob_as_tree(directory: Path, hashid: str) -> Directory:
@@ -111,7 +111,7 @@ def get_tree(current_path: Path, patterns: List[str] = []) -> Directory:
     tree = Directory({}, {})
 
     # load ignore pattern
-    patterns = [*patterns, *fs.load_ignore_file(current_path)]
+    patterns = [*patterns, *fs.load_ignore_file_as_patterns(current_path)]
 
     for name in sorted(list(os.listdir(current_path))):
         item_path = Path(os.path.join(current_path, name))

@@ -11,7 +11,7 @@ def make_dirs(path: Path):
     path.mkdir(0o774, True, True)
 
 
-def save_file(file_path: Path, content: str, override: bool = False) -> None:
+def store_file(file_path: Path, content: str, override: bool = False) -> None:
     if file_path.is_file() and override:
         # make file writeable
         file_path.chmod(stat.S_IWRITE | stat.S_IWGRP | stat.S_IROTH)
@@ -26,20 +26,20 @@ def save_file(file_path: Path, content: str, override: bool = False) -> None:
         file_path.chmod(stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH)
 
 
-def save_dict_as_file(
+def store_dict_as_file(
     file_path: Path, data: Dict[str, Any], override: bool = False
 ) -> None:
-    save_file(file_path, transform.dict_as_json(data), override)
+    store_file(file_path, transform.dict_as_json(data), override)
 
 
-def save_dict_as_blob(directory: Path, data: Dict[str, Any]) -> str:
+def store_dict_as_blob(directory: Path, data: Dict[str, Any]) -> str:
     contents = transform.dict_as_json(data)
 
     hashid = transform.string_as_hashid(contents)
 
     hashid_path = directory.joinpath(transform.hashid_as_path(hashid))
 
-    save_file(hashid_path, contents)
+    store_file(hashid_path, contents)
 
     return hashid
 
@@ -84,7 +84,7 @@ def copy_file_as_blob(directory: Path, source: Path) -> str:
     return hashid
 
 
-def load_ignore_file(directory: Path) -> List[str]:
+def load_ignore_file_as_patterns(directory: Path) -> List[str]:
     patterns = []
 
     ignore_file_path = directory.joinpath(".ignore")

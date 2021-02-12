@@ -9,7 +9,7 @@ from snapfs.datatypes import Branch, Tag
 
 
 def store_branch_as_file(path: Path, branch: Branch) -> None:
-    fs.save_dict_as_file(path, serialize_branch_as_dict(branch), override=True)
+    fs.store_dict_as_file(path, serialize_branch_as_dict(branch), override=True)
 
 
 def load_file_as_branch(path: Path) -> Branch:
@@ -25,7 +25,7 @@ def deserialize_dict_as_branch(data: Dict[str, Any]) -> Branch:
 
 
 def store_tag_as_file(path: Path, tag: Tag) -> None:
-    fs.save_dict_as_file(path, serialize_tag_as_dict(tag), override=True)
+    fs.store_dict_as_file(path, serialize_tag_as_dict(tag), override=True)
 
 
 def load_file_as_tag(path: Path) -> Tag:

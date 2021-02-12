@@ -6,7 +6,7 @@ from snapfs.datatypes import Commit, Author
 
 
 def store_commit_as_blob(directory: Path, commit: Commit) -> str:
-    return fs.save_dict_as_blob(directory, serialize_commit_as_dict(commit))
+    return fs.store_dict_as_blob(directory, serialize_commit_as_dict(commit))
 
 
 def load_blob_as_commit(path: Path) -> Commit:

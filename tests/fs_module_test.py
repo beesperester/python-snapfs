@@ -33,7 +33,7 @@ class TestFSModule(unittest.TestCase):
     def test_save_file(self):
         file_path = get_named_tmpfile_path()
 
-        fs.save_file(file_path, "hello world", override=True)
+        fs.store_file(file_path, "hello world", override=True)
 
         result = ""
         expected_result = "hello world"
@@ -49,7 +49,7 @@ class TestFSModule(unittest.TestCase):
         result = {}
         expected_result = {"hello": "world"}
 
-        fs.save_dict_as_file(file_path, expected_result, override=True)
+        fs.store_dict_as_file(file_path, expected_result, override=True)
 
         with open(file_path, "r") as f:
             result = json.load(f)
@@ -64,7 +64,7 @@ class TestFSModule(unittest.TestCase):
             transform.dict_as_json(data)
         )
         with tempfile.TemporaryDirectory() as tmpdirname:
-            result = fs.save_dict_as_blob(Path(tmpdirname), data)
+            result = fs.store_dict_as_blob(Path(tmpdirname), data)
 
         self.assertEqual(result, expected_result)
 
@@ -105,7 +105,7 @@ class TestFSModule(unittest.TestCase):
         file_path = get_named_tmpfile_path()
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            hashid = fs.save_dict_as_blob(Path(tmpdirname), data)
+            hashid = fs.store_dict_as_blob(Path(tmpdirname), data)
 
             result = fs.load_blob_as_dict(Path(tmpdirname), hashid)
 
@@ -146,6 +146,6 @@ class TestFSModule(unittest.TestCase):
             with open(ignore_file_path, "w") as f:
                 f.write(data)
 
-            result = fs.load_ignore_file(Path(tmpdirname))
+            result = fs.load_ignore_file_as_patterns(Path(tmpdirname))
 
         self.assertListEqual(result, expected_result)

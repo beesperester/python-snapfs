@@ -6,7 +6,7 @@ from snapfs.datatypes import Head
 
 
 def store_head_as_file(path: Path, head: Head) -> None:
-    fs.save_dict_as_file(path, serialize_head_as_dict(head), override=True)
+    fs.store_dict_as_file(path, serialize_head_as_dict(head), override=True)
 
 
 def load_file_as_head(path: Path) -> Head:

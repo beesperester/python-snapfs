@@ -6,7 +6,7 @@ from snapfs.datatypes import Stage, File
 
 
 def store_stage_as_file(path: Path, stage: Stage) -> None:
-    fs.save_dict_as_file(path, serialize_stage_as_dict(stage), override=True)
+    fs.store_dict_as_file(path, serialize_stage_as_dict(stage), override=True)
 
 
 def serialize_stage_as_dict(stage: Stage) -> Dict[str, Any]:
