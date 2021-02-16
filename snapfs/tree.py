@@ -121,7 +121,9 @@ def list_as_tree(path: Path, paths: List[File]) -> Directory:
     return result
 
 
-def get_tree(current_path: Path, patterns: List[str] = []) -> Directory:
+def load_directory_path_as_tree(
+    current_path: Path, patterns: List[str] = []
+) -> Directory:
     tree = Directory({}, {})
 
     # load ignore pattern
@@ -134,7 +136,7 @@ def get_tree(current_path: Path, patterns: List[str] = []) -> Directory:
             if filters.patterns_filter(name, patterns):
                 tree.files[name] = File(item_path)
         elif item_path.is_dir():
-            result = get_tree(item_path, patterns)
+            result = load_directory_path_as_tree(item_path, patterns)
 
             if result.files or result.directories:
                 tree.directories[name] = result

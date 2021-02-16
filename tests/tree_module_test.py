@@ -132,7 +132,7 @@ class TestTreeModule(unittest.TestCase):
             with open(fake_file_path, "wb") as f:
                 f.write(b"fake binary data")
 
-            tree_instance = tree.get_tree(Path(tmpdirname))
+            tree_instance = tree.load_directory_path_as_tree(Path(tmpdirname))
 
         expected_result = {
             "directories": {
