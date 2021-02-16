@@ -1,3 +1,4 @@
+import os
 import unittest
 import tempfile
 import json
@@ -108,3 +109,45 @@ class TestTreeModule(unittest.TestCase):
         result = tree.serialize_tree_as_dict(tree.list_as_tree(Path(), data))
 
         self.assertEqual(result, expected_result)
+
+    def test_load_directory_path_as_tree(self):
+        tree_instance = Directory()
+        fake_file_path = Path()
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            ignore_file_path = Path(tmpdirname).joinpath(".ignore")
+
+            # add ignore file
+            with open(ignore_file_path, "w") as f:
+                f.write("\n".join(["*", "^*.c4d"]))
+
+            # create subdirectory "test"
+            test_directory_path = Path(tmpdirname).joinpath("test")
+
+            os.makedirs(test_directory_path)
+
+            # create fake binary file
+            fake_file_path = test_directory_path.joinpath("foo.c4d")
+
+            with open(fake_file_path, "wb") as f:
+                f.write(b"fake binary data")
+
+            tree_instance = tree.get_tree(Path(tmpdirname))
+
+        expected_result = {
+            "directories": {
+                "test": {
+                    "directories": {},
+                    "files": {
+                        "foo.c4d": file.serialize_file_as_dict(
+                            File(fake_file_path)
+                        )
+                    },
+                }
+            },
+            "files": {},
+        }
+
+        result = tree.serialize_tree_as_dict(tree_instance)
+
+        self.assertDictEqual(result, expected_result)
