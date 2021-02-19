@@ -164,15 +164,25 @@ class TestTreeModule(unittest.TestCase):
     def test_compare_trees(self):
         file_a_path = get_named_tmpfile_path()
         file_b_path = get_named_tmpfile_path()
+        file_c_path = get_named_tmpfile_path()
 
         fill_tmpfile(file_a_path)
         fill_tmpfile(file_b_path)
 
         file_a_instance = File(file_a_path)
         file_b_instance = File(file_b_path)
+        file_c_instance = File(file_c_path)
 
         tree_old_instance = Directory(
-            {"a": Directory({}, {"file_a.txt": file_a_instance})}
+            {
+                "a": Directory(
+                    {},
+                    {
+                        "file_a.txt": file_a_instance,
+                        "file_c.txt": file_c_instance,
+                    },
+                )
+            }
         )
 
         tree_new_instance = Directory(
@@ -186,7 +196,7 @@ class TestTreeModule(unittest.TestCase):
             Path(), tree_old_instance, tree_new_instance
         )
 
-        expected_result = ["added: b/file_b.txt"]
+        expected_result = ["removed: a/file_c.txt", "added: b/file_b.txt"]
         result = [
             differences.serialize_difference_as_message(x)
             for x in differences_instance.differences
