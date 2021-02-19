@@ -2,21 +2,30 @@ import os
 import unittest
 import tempfile
 import json
+import random
+import string
 
 from pathlib import Path
 from typing import List
 
 
-from snapfs import fs, transform, stage, tree, file
-from snapfs.datatypes import File, Directory
+from snapfs import fs, transform, stage, tree, file, differences
+from snapfs.datatypes import File, Directory, Difference
 
 
-def get_named_tmpfile_path():
+def get_named_tmpfile_path() -> Path:
     tmpfile = tempfile.NamedTemporaryFile(mode="wb", delete=False)
     # tmpfile.write(file_contents)
     tmpfile.close()
 
     return Path(tmpfile.name)
+
+
+def fill_tmpfile(path: Path) -> None:
+    with open(path, "w") as f:
+        f.write(
+            "".join(random.choice(string.ascii_letters) for x in range(512))
+        )
 
 
 class TestTreeModule(unittest.TestCase):
@@ -151,3 +160,36 @@ class TestTreeModule(unittest.TestCase):
         result = tree.serialize_tree_as_dict(tree_instance)
 
         self.assertDictEqual(result, expected_result)
+
+    def test_compare_trees(self):
+        file_a_path = get_named_tmpfile_path()
+        file_b_path = get_named_tmpfile_path()
+
+        fill_tmpfile(file_a_path)
+        fill_tmpfile(file_b_path)
+
+        file_a_instance = File(file_a_path)
+        file_b_instance = File(file_b_path)
+
+        tree_old_instance = Directory(
+            {"a": Directory({}, {"file_a.txt": file_a_instance})}
+        )
+
+        tree_new_instance = Directory(
+            {
+                "a": Directory({}, {"file_a.txt": file_a_instance}),
+                "b": Directory({}, {"file_b.txt": file_b_instance}),
+            }
+        )
+
+        differences_instance = tree.compare_trees(
+            Path(), tree_old_instance, tree_new_instance
+        )
+
+        expected_result = ["added: b/file_b.txt"]
+        result = [
+            differences.serialize_difference_as_message(x)
+            for x in differences_instance.differences
+        ]
+
+        self.assertListEqual(result, expected_result)

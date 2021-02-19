@@ -144,16 +144,16 @@ def load_directory_path_as_tree(
     return tree
 
 
-def compare_trees(path: Path, a: Directory, b: Directory) -> Differences:
+def compare_trees(path: Path, old: Directory, new: Directory) -> Differences:
     differences_instance = Differences()
 
-    for key, value in a.directories.items():
-        if key not in b.directories.keys():
+    for key, value in new.directories.items():
+        if key not in old.directories.keys():
             differences_instance = Differences(
                 [
                     *differences_instance.differences,
                     *compare_trees(
-                        path.joinpath(key), value, Directory({}, {})
+                        path.joinpath(key), Directory({}, {}), value
                     ).differences,
                 ]
             )
@@ -162,31 +162,31 @@ def compare_trees(path: Path, a: Directory, b: Directory) -> Differences:
                 [
                     *differences_instance.differences,
                     *compare_trees(
-                        path.joinpath(key), value, b.directories[key]
+                        path.joinpath(key), old.directories[key], value
                     ).differences,
                 ]
             )
 
     # test for added or updated files
-    for key, value in a.files.items():
+    for key, value in new.files.items():
         file_path = path.joinpath(key)
 
-        if key not in b.files.keys():
+        if key not in old.files.keys():
             differences_instance.differences.append(
                 FileAddedDifference(File(file_path))
             )
-        elif transform.file_as_hashid(value.path) != transform.file_as_hashid(
-            b.files[key].path
-        ):
+        elif file.serialize_file_as_hashid(
+            value
+        ) != file.serialize_file_as_hashid(old.files[key]):
             differences_instance.differences.append(
                 FileUpdatedDifference(File(file_path))
             )
 
     # test for removed files
-    for key, value in b.files.items():
+    for key, value in old.files.items():
         file_path = path.joinpath(key)
 
-        if key not in a.files.keys():
+        if key not in new.files.keys():
             differences_instance.differences.append(
                 FileRemovedDifference(File(file_path))
             )
