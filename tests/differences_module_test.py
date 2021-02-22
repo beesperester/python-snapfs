@@ -74,3 +74,32 @@ class TestDifferencesModule(unittest.TestCase):
         )
 
         self.assertDictEqual(result, expected_result)
+
+    def test_serialize_difference_as_dict(self):
+        file_instance = File(Path("foobar.txt"))
+        difference_instance = FileAddedDifference(file_instance)
+
+        expected_result = {
+            "type": "FileAddedDifference",
+            "file": file.serialize_file_as_dict(file_instance),
+        }
+
+        result = differences.serialize_difference_as_dict(difference_instance)
+
+        self.assertDictEqual(result, expected_result)
+
+    def test_deserialize_dict_as_difference(self):
+        file_instance = File(Path("foobar.txt"))
+
+        data = {
+            "type": "FileAddedDifference",
+            "file": file.serialize_file_as_dict(file_instance),
+        }
+
+        expected_result = data
+
+        result = differences.serialize_difference_as_dict(
+            differences.deserialize_dict_as_difference(data)
+        )
+
+        self.assertDictEqual(result, expected_result)

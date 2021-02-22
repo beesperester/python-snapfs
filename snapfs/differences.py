@@ -13,13 +13,38 @@ from snapfs.datatypes import (
 def serialize_differences_as_dict(differences: Differences) -> Dict[str, Any]:
     return {
         "differences": [
-            {
-                "type": x.__class__.__name__,
-                "file": file.serialize_file_as_dict(x.file),
-            }
-            for x in differences.differences
+            serialize_difference_as_dict(x) for x in differences.differences
         ]
     }
+
+
+def serialize_difference_as_dict(difference: Difference) -> Dict[str, Any]:
+    return {
+        "type": difference.__class__.__name__,
+        "file": file.serialize_file_as_dict(difference.file),
+    }
+
+
+def deserialize_dict_as_difference(data: Dict[str, Any]) -> Difference:
+    difference_type: str = data["type"]
+
+    return globals()[difference_type](
+        **{
+            **{key: value for key, value in data.items() if key != "type"},
+            "file": file.deserialize_dict_as_file(data["file"]),
+        }
+    )
+
+
+def deserialize_dict_as_differences(data: Dict[str, Any]) -> Differences:
+    return Differences(
+        **{
+            **data,
+            "differences": [
+                deserialize_dict_as_difference(x) for x in data["differences"]
+            ],
+        }
+    )
 
 
 def serialize_difference_as_message(difference: Difference) -> str:
