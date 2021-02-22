@@ -30,4 +30,8 @@ def serialize_difference_as_message(difference: Difference) -> str:
     elif isinstance(difference, FileRemovedDifference):
         return "removed: {}".format(difference.file.path)
 
-    raise Exception()
+    raise Exception(
+        "Difference must be subclass of difference but is '{}'".format(
+            difference.__class__.__name__
+        )
+    )
