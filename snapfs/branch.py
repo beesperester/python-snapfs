@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from snapfs import fs, transform
-from snapfs.datatypes import Branch, Tag
+from snapfs.datatypes import Branch
 
 
 def store_branch_as_file(path: Path, branch: Branch) -> None:

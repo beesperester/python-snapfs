@@ -47,7 +47,8 @@ class Branch:
 
 @dataclass
 class Tag:
-    message: str
+    tag: str
+    message: str = ""
     commit_hashid: str = ""
 
 
