@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List
 
 
-from snapfs import fs, transform, branch, repository, head
+from snapfs import fs, transform, branch, repository, head, tag
 from snapfs.datatypes import Branch, Tag, Head
 
 
@@ -69,6 +69,20 @@ class TestRepositoryModule(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
+    def test_get_branch_path(self):
+        expected_result = "foobar/.snapfs/references/branches/main"
+
+        result = str(repository.get_branch_path(Path("foobar"), "main", False))
+
+        self.assertEqual(result, expected_result)
+
+    def test_get_tag_path(self):
+        expected_result = "foobar/.snapfs/references/tags/v1.0.0"
+
+        result = str(repository.get_tag_path(Path("foobar"), "v1.0.0", False))
+
+        self.assertEqual(result, expected_result)
+
     def test_get_head(self):
         head_instance = Head()
 
@@ -85,5 +99,47 @@ class TestRepositoryModule(unittest.TestCase):
             head.store_head_as_file(head_path, head_instance)
 
             result = head.serialize_head_as_dict(repository.get_head(tmppath))
+
+        self.assertEqual(result, expected_result)
+
+    def test_get_branch(self):
+        branch_instance = Branch()
+
+        expected_result = branch.serialize_branch_as_dict(branch_instance)
+
+        result = {}
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tmppath = Path(tmpdirname)
+
+            branch_path = repository.get_branch_path(tmppath, "main", False)
+
+            makedirs(branch_path.parent, exist_ok=True)
+
+            branch.store_branch_as_file(branch_path, branch_instance)
+
+            result = branch.serialize_branch_as_dict(
+                repository.get_branch(tmppath, "main")
+            )
+
+        self.assertEqual(result, expected_result)
+
+    def test_get_tag(self):
+        tag_instance = Tag()
+
+        expected_result = tag.serialize_tag_as_dict(tag_instance)
+
+        result = {}
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tmppath = Path(tmpdirname)
+
+            tag_path = repository.get_tag_path(tmppath, "v1.0.0", False)
+
+            makedirs(tag_path.parent, exist_ok=True)
+
+            tag.store_tag_as_file(tag_path, tag_instance)
+
+            result = tag.serialize_tag_as_dict(
+                repository.get_tag(tmppath, "v1.0.0")
+            )
 
         self.assertEqual(result, expected_result)

@@ -1,15 +1,21 @@
 import os
 
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
-from snapfs import head
-from snapfs.datatypes import Head
+from snapfs import head, branch, tag
+from snapfs.datatypes import Head, Tag, Branch
 
 
 class DirectoryNotFoundError(FileNotFoundError):
     """
-    This class represens a directory not found exception
+    This class represens a directory not found error
+    """
+
+
+class NoReferenceError(Exception):
+    """
+    This class represents a no reference error
     """
 
 
@@ -77,5 +83,43 @@ def get_head_path(path: Path, test: bool = True) -> Path:
     return head_path
 
 
+def get_branch_path(path: Path, name: str, test: bool = True) -> Path:
+    branch_path = get_branches_path(path, test).joinpath(name)
+
+    if test and not branch_path.is_file():
+        raise FileNotFoundError(branch_path)
+
+    return branch_path
+
+
+def get_tag_path(path: Path, name: str, test: bool = True) -> Path:
+    tag_path = get_tags_path(path, test).joinpath(name)
+
+    if test and not tag_path.is_file():
+        raise FileNotFoundError(tag_path)
+
+    return tag_path
+
+
 def get_head(path: Path) -> Head:
     return head.load_file_as_head(get_head_path(path))
+
+
+def get_branch(path: Path, name: str) -> Branch:
+    return branch.load_file_as_branch(get_branch_path(path, name))
+
+
+def get_tag(path: Path, name: str) -> Tag:
+    return tag.load_file_as_tag(get_tag_path(path, name))
+
+
+def get_reference(path: Path) -> Union[Branch, Tag]:
+    head_instance = get_head(path)
+
+    if head_instance.ref:
+        if "branches" in head_instance.ref:
+            return get_branch(path, Path(head_instance.ref).name)
+        if "tags" in head_instance.ref:
+            return get_tag(path, Path(head_instance.ref).name)
+
+    raise NoReferenceError()

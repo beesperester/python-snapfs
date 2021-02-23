@@ -22,9 +22,9 @@ class TestTagModule(unittest.TestCase):
     def test_store_tag_as_file(self):
         file_path = get_named_tmpfile_path()
 
-        tag_instance = Tag("1.0.0")
+        tag_instance = Tag()
 
-        data = {"tag": "1.0.0", "message": "", "commit_hashid": ""}
+        data = {"message": "", "commit_hashid": ""}
 
         result = ""
         expected_result = transform.dict_as_json(data)
@@ -39,7 +39,7 @@ class TestTagModule(unittest.TestCase):
     def test_load_file_as_tag(self):
         file_path = get_named_tmpfile_path()
 
-        tag_instance = Tag("1.0.0")
+        tag_instance = Tag()
 
         result = {}
         expected_result = tag.serialize_tag_as_dict(tag_instance)
@@ -51,9 +51,9 @@ class TestTagModule(unittest.TestCase):
         self.assertDictEqual(result, expected_result)
 
     def test_serialize_tag_as_dict(self):
-        data = {"tag": "1.0.0", "message": "", "commit_hashid": ""}
+        data = {"message": "", "commit_hashid": ""}
 
-        tag_instance = Tag("1.0.0")
+        tag_instance = Tag()
 
         expected_result = data
         result = tag.serialize_tag_as_dict(tag_instance)
@@ -61,7 +61,7 @@ class TestTagModule(unittest.TestCase):
         self.assertDictEqual(result, expected_result)
 
     def test_deserialize_dict_as_tag(self):
-        data = {"tag": "1.0.0", "message": "", "commit_hashid": ""}
+        data = {"message": "", "commit_hashid": ""}
 
         expected_result = data
         result = tag.serialize_tag_as_dict(tag.deserialize_dict_as_tag(data))
