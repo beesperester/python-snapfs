@@ -3,8 +3,8 @@ import os
 from pathlib import Path
 from typing import List, Dict, Optional, Union
 
-from snapfs import head, branch, tag
-from snapfs.datatypes import Head, Tag, Branch, Reference
+from snapfs import head, branch, tag, transform, commit
+from snapfs.datatypes import Commit, Head, Tag, Branch, Reference
 
 
 class DirectoryNotFoundError(FileNotFoundError):
@@ -101,6 +101,18 @@ def get_tag_path(path: Path, name: str, test: bool = True) -> Path:
     return tag_path
 
 
+def get_commit_path(path: Path, commit_hashid: str, test: bool = True) -> Path:
+    commit_path = get_blobs_path(path, test).joinpath(
+        transform.hashid_as_path(commit_hashid)
+    )
+
+    if test and not commit_path.is_file():
+        raise FileNotFoundError(commit_path)
+
+    return commit_path
+
+
+# module helpers
 def get_head(path: Path) -> Head:
     return head.load_file_as_head(get_head_path(path))
 
@@ -122,4 +134,14 @@ def get_reference(path: Path) -> Reference:
         if "tags" in head_instance.ref:
             return get_tag(path, Path(head_instance.ref).name)
 
-    raise NoReferenceError()
+    raise NoReferenceError("Unable to get reference for '{}'".format(path))
+
+
+def get_commit(path: Path, commit_hashid: str) -> Commit:
+    return commit.load_blob_as_commit(get_commit_path(path, commit_hashid))
+
+
+def get_latest_commit(path: Path) -> Commit:
+    reference_instance = get_reference(path)
+
+    return get_commit(path, reference_instance.commit_hashid)

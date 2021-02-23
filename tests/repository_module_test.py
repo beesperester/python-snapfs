@@ -7,8 +7,17 @@ from pathlib import Path
 from typing import List
 
 
-from snapfs import fs, transform, branch, repository, head, tag, reference
-from snapfs.datatypes import Branch, Tag, Head
+from snapfs import (
+    fs,
+    transform,
+    branch,
+    repository,
+    head,
+    tag,
+    reference,
+    commit,
+)
+from snapfs.datatypes import Author, Branch, Commit, Tag, Head
 
 
 def get_named_tmpfile_path():
@@ -80,6 +89,19 @@ class TestRepositoryModule(unittest.TestCase):
         expected_result = "foobar/.snapfs/references/tags/v1.0.0"
 
         result = str(repository.get_tag_path(Path("foobar"), "v1.0.0", False))
+
+        self.assertEqual(result, expected_result)
+
+    def test_get_commit_path(self):
+        hashid = transform.string_as_hashid("test")
+
+        expected_result = str(
+            Path("foobar/.snapfs/blobs").joinpath(
+                transform.hashid_as_path(hashid)
+            )
+        )
+
+        result = str(repository.get_commit_path(Path("foobar"), hashid, False))
 
         self.assertEqual(result, expected_result)
 
@@ -168,10 +190,36 @@ class TestRepositoryModule(unittest.TestCase):
 
             head.store_head_as_file(head_path, head_instance)
 
-            reference_instance = repository.get_reference(tmppath)
-
             result = reference.serialize_reference_as_dict(
                 repository.get_reference(tmppath)
+            )
+
+        self.assertEqual(result, expected_result)
+
+    def test_get_commit(self):
+        branch_instance = Branch()
+        head_instance = Head("references/branches/main")
+
+        author_instance = Author("beesperester")
+
+        commit_instance = Commit(author_instance, "initial commit")
+
+        expected_result = commit.serialize_commit_as_dict(commit_instance)
+
+        result = {}
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tmppath = Path(tmpdirname)
+
+            blobs_path = tmppath.joinpath(".snapfs/blobs")
+
+            makedirs(blobs_path, exist_ok=True)
+
+            hashid = commit.store_commit_as_blob(blobs_path, commit_instance)
+
+            result = commit.serialize_commit_as_dict(
+                commit.load_blob_as_commit(
+                    repository.get_commit_path(tmppath, hashid)
+                )
             )
 
         self.assertEqual(result, expected_result)
