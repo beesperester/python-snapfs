@@ -41,14 +41,24 @@ class Head:
 
 
 @dataclass
-class Branch:
+class Reference:
     commit_hashid: str = ""
 
 
 @dataclass
-class Tag:
+class Branch(Reference):
+    """
+    This class represents a branch reference
+    """
+
+
+@dataclass
+class Tag(Reference):
+    """
+    This class represents a tag reference
+    """
+
     message: str = ""
-    commit_hashid: str = ""
 
 
 @dataclass

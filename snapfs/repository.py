@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Dict, Optional, Union
 
 from snapfs import head, branch, tag
-from snapfs.datatypes import Head, Tag, Branch
+from snapfs.datatypes import Head, Tag, Branch, Reference
 
 
 class DirectoryNotFoundError(FileNotFoundError):
@@ -113,7 +113,7 @@ def get_tag(path: Path, name: str) -> Tag:
     return tag.load_file_as_tag(get_tag_path(path, name))
 
 
-def get_reference(path: Path) -> Union[Branch, Tag]:
+def get_reference(path: Path) -> Reference:
     head_instance = get_head(path)
 
     if head_instance.ref:

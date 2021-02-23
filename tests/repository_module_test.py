@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List
 
 
-from snapfs import fs, transform, branch, repository, head, tag
+from snapfs import fs, transform, branch, repository, head, tag, reference
 from snapfs.datatypes import Branch, Tag, Head
 
 
@@ -140,6 +140,38 @@ class TestRepositoryModule(unittest.TestCase):
 
             result = tag.serialize_tag_as_dict(
                 repository.get_tag(tmppath, "v1.0.0")
+            )
+
+        self.assertEqual(result, expected_result)
+
+    def test_get_reference(self):
+        branch_instance = Branch()
+        head_instance = Head("references/branches/main")
+
+        expected_result = branch.serialize_branch_as_dict(branch_instance)
+
+        result = {}
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tmppath = Path(tmpdirname)
+
+            # store branch
+            branch_path = repository.get_branch_path(tmppath, "main", False)
+
+            makedirs(branch_path.parent, exist_ok=True)
+
+            branch.store_branch_as_file(branch_path, branch_instance)
+
+            # store head
+            head_path = repository.get_head_path(tmppath, False)
+
+            makedirs(head_path.parent, exist_ok=True)
+
+            head.store_head_as_file(head_path, head_instance)
+
+            reference_instance = repository.get_reference(tmppath)
+
+            result = reference.serialize_reference_as_dict(
+                repository.get_reference(tmppath)
             )
 
         self.assertEqual(result, expected_result)
