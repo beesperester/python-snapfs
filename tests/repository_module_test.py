@@ -197,9 +197,6 @@ class TestRepositoryModule(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     def test_get_commit(self):
-        branch_instance = Branch()
-        head_instance = Head("references/branches/main")
-
         author_instance = Author("beesperester")
 
         commit_instance = Commit(author_instance, "initial commit")
@@ -220,6 +217,48 @@ class TestRepositoryModule(unittest.TestCase):
                 commit.load_blob_as_commit(
                     repository.get_commit_path(tmppath, hashid)
                 )
+            )
+
+        self.assertEqual(result, expected_result)
+
+    def test_get_latest_commit(self):
+        author_instance = Author("beesperester")
+
+        commit_instance = Commit(author_instance, "initial commit")
+
+        expected_result = commit.serialize_commit_as_dict(commit_instance)
+
+        result = {}
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tmppath = Path(tmpdirname)
+
+            # create commit blob
+            blobs_path = repository.get_blobs_path(tmppath, False)
+
+            makedirs(blobs_path, exist_ok=True)
+
+            hashid = commit.store_commit_as_blob(blobs_path, commit_instance)
+
+            # create branch with commit hashid
+            branch_path = repository.get_branch_path(tmppath, "main", False)
+
+            makedirs(branch_path.parent, exist_ok=True)
+
+            branch_instance = Branch(hashid)
+
+            branch.store_branch_as_file(branch_path, branch_instance)
+
+            # create head with branch as ref
+            head_path = repository.get_head_path(tmppath, False)
+
+            makedirs(head_path.parent, exist_ok=True)
+
+            head_instance = Head("references/branches/main")
+
+            head.store_head_as_file(head_path, head_instance)
+
+            result = commit.serialize_commit_as_dict(
+                repository.get_latest_commit(tmppath)
             )
 
         self.assertEqual(result, expected_result)
