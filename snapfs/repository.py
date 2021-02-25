@@ -1,10 +1,10 @@
 import os
 
 from pathlib import Path
-from typing import List, Dict, Optional, Union
+from typing import Callable, List, Dict, Optional, Union
 
-from snapfs import head, branch, tag, transform, commit
-from snapfs.datatypes import Commit, Head, Tag, Branch, Reference
+from snapfs import head, branch, tag, transform, commit, stage, fs
+from snapfs.datatypes import Commit, Head, Tag, Branch, Reference, Stage
 
 
 class DirectoryNotFoundError(FileNotFoundError):
@@ -117,6 +117,10 @@ def get_head(path: Path) -> Head:
     return head.load_file_as_head(get_head_path(path))
 
 
+def store_head(path: Path, head_instance: Head) -> None:
+    head.store_head_as_file(get_head_path(path, False), head_instance)
+
+
 def get_branch(path: Path, name: str) -> Branch:
     return branch.load_file_as_branch(get_branch_path(path, name))
 
@@ -145,3 +149,64 @@ def get_latest_commit(path: Path) -> Commit:
     reference_instance = get_reference(path)
 
     return get_commit(path, reference_instance.commit_hashid)
+
+
+def get_stage(path: Path) -> Stage:
+    return stage.load_file_as_stage(get_stage_path(path))
+
+
+def store_stage(path: Path, stage_instance: Stage) -> None:
+    stage.store_stage_as_file(get_stage_path(path, False), stage_instance)
+
+
+def get_directory_accessors() -> List[Callable]:
+    return [
+        get_repository_path,
+        get_blobs_path,
+        get_references_path,
+        get_branches_path,
+        get_tags_path,
+    ]
+
+
+def get_file_accessors() -> List[Callable]:
+    return [get_stage_path, get_head_path]
+
+
+def is_initialized(path: Path) -> bool:
+    try:
+        # access all necessary directories
+        transform.apply(lambda x: x(path), get_directory_accessors())
+
+        # acess all necessary files
+        transform.apply(lambda x: x(path), get_file_accessors())
+
+        return True
+    except (FileNotFoundError, DirectoryNotFoundError) as e:
+        print("{}: '{}'".format(e.__class__.__name__, e))
+
+        return False
+
+
+def initialize(path: Path) -> None:
+    if not is_initialized(path):
+        # create necessary directories
+        transform.apply(
+            lambda x: fs.make_dirs(x(path, False)),
+            get_directory_accessors(),
+        )
+
+        # create necessary files
+
+        # create new stage
+        stage_instance = Stage()
+
+        store_stage(path, stage_instance)
+
+        # create new head
+        head_instance = Head()
+
+        store_head(path, head_instance)
+
+        # checkout main branch
+        # checkout(path, "main")
