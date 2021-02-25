@@ -9,7 +9,15 @@ from pathlib import Path
 from typing import List
 
 
-from snapfs import fs, transform, stage, tree, file, differences, difference
+from snapfs import (
+    fs,
+    transform,
+    stage,
+    directory,
+    file,
+    differences,
+    difference,
+)
 from snapfs.datatypes import File, Directory, Difference
 
 
@@ -29,75 +37,81 @@ def fill_tmpfile(path: Path) -> None:
 
 
 class TestTreeModule(unittest.TestCase):
-    def test_store_tree_as_blob(self):
-        tree_instance = Directory()
+    def test_store_directory_as_blob(self):
+        directory_instance = Directory()
 
         result = ""
         expected_result = transform.string_as_hashid(
-            transform.dict_as_json(tree.serialize_as_dict(tree_instance))
+            transform.dict_as_json(
+                directory.serialize_as_dict(directory_instance)
+            )
         )
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            result = tree.store_as_blob(Path(tmpdirname), tree_instance)
+            result = directory.store_as_blob(
+                Path(tmpdirname), directory_instance
+            )
 
         self.assertEqual(result, expected_result)
 
-    def test_load_blob_as_tree(self):
-        tree_instance = Directory()
+    def test_load_blob_as_directory(self):
+        directory_instance = Directory()
 
         result = {}
         expected_result = {"directories": {}, "files": {}}
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            tree_hashid = tree.store_as_blob(Path(tmpdirname), tree_instance)
+            directory_hashid = directory.store_as_blob(
+                Path(tmpdirname), directory_instance
+            )
 
-            result = tree.serialize_as_dict(
-                tree.load_from_blob(Path(tmpdirname), tree_hashid)
+            result = directory.serialize_as_dict(
+                directory.load_from_blob(Path(tmpdirname), directory_hashid)
             )
 
         self.assertDictEqual(result, expected_result)
 
-    def test_serialize_tree_as_hashid(self):
-        tree_instance = Directory()
+    def test_serialize_directory_as_hashid(self):
+        directory_instance = Directory()
 
         data = {"directories": {}, "files": {}}
 
         expected_result = transform.dict_as_hashid(data)
-        result = tree.serialize_as_hashid(tree_instance)
+        result = directory.serialize_as_hashid(directory_instance)
 
         self.assertEqual(result, expected_result)
 
-    def test_serialize_tree_as_dict(self):
+    def test_serialize_directory_as_dict(self):
         directories = {"test": Directory()}
 
-        tree_instance = Directory(directories)
+        directory_instance = Directory(directories)
 
         expected_result = {
             "directories": {"test": {"directories": {}, "files": {}}},
             "files": {},
         }
 
-        result = tree.serialize_as_dict(tree_instance)
+        result = directory.serialize_as_dict(directory_instance)
 
         self.assertDictEqual(result, expected_result)
 
-    def test_tree_as_list(self):
+    def test_directory_as_list(self):
         file_instance = File(Path("test"))
 
         directories = {}
         files = {"test": file_instance}
 
-        tree_instance = Directory(directories, files)
+        directory_instance = Directory(directories, files)
 
         expected_result = [file.serialize_as_dict(file_instance)]
         result = [
             file.serialize_as_dict(x)
-            for x in tree.transform_tree_as_list(Path(), tree_instance)
+            for x in directory.transform_as_list(Path(), directory_instance)
         ]
 
         self.assertListEqual(result, expected_result)
 
-    def test_list_as_tree(self):
+    def test_list_as_directory(self):
         file_instance = File(Path("test/foobar"))
 
         data = [file_instance]
@@ -111,14 +125,14 @@ class TestTreeModule(unittest.TestCase):
             },
             "files": {},
         }
-        result = tree.serialize_as_dict(
-            tree.transform_list_as_tree(Path(), data)
+        result = directory.serialize_as_dict(
+            directory.transform_from_list(Path(), data)
         )
 
         self.assertEqual(result, expected_result)
 
-    def test_load_directory_path_as_tree(self):
-        tree_instance = Directory()
+    def test_load_directory_path_as_directory(self):
+        directory_instance = Directory()
         fake_file_path = Path()
 
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -139,7 +153,9 @@ class TestTreeModule(unittest.TestCase):
             with open(fake_file_path, "wb") as f:
                 f.write(b"fake binary data")
 
-            tree_instance = tree.load_from_directory_path(Path(tmpdirname))
+            directory_instance = directory.load_from_directory_path(
+                Path(tmpdirname)
+            )
 
         expected_result = {
             "directories": {
@@ -153,11 +169,11 @@ class TestTreeModule(unittest.TestCase):
             "files": {},
         }
 
-        result = tree.serialize_as_dict(tree_instance)
+        result = directory.serialize_as_dict(directory_instance)
 
         self.assertDictEqual(result, expected_result)
 
-    def test_compare_trees(self):
+    def test_compare_directorys(self):
         file_a_path = get_named_tmpfile_path()
         file_b_path = get_named_tmpfile_path()
         file_c_path = get_named_tmpfile_path()
@@ -169,7 +185,7 @@ class TestTreeModule(unittest.TestCase):
         file_b_instance = File(file_b_path)
         file_c_instance = File(file_c_path)
 
-        tree_old_instance = Directory(
+        directory_old_instance = Directory(
             {
                 "a": Directory(
                     {},
@@ -181,15 +197,15 @@ class TestTreeModule(unittest.TestCase):
             }
         )
 
-        tree_new_instance = Directory(
+        directory_new_instance = Directory(
             {
                 "a": Directory({}, {"file_a.txt": file_a_instance}),
                 "b": Directory({}, {"file_b.txt": file_b_instance}),
             }
         )
 
-        differences_instance = tree.compare(
-            Path(), tree_old_instance, tree_new_instance
+        differences_instance = directory.compare(
+            Path(), directory_old_instance, directory_new_instance
         )
 
         expected_result = ["removed: a/file_c.txt", "added: b/file_b.txt"]

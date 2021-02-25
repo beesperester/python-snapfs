@@ -16,81 +16,81 @@ from snapfs.datatypes import (
 )
 
 
-def store_as_blob(directory: Path, tree: Directory) -> str:
+def store_as_blob(path: Path, directory: Directory) -> str:
     data = {
         "directories": {
-            key: store_as_blob(directory, value)
-            for key, value in tree.directories.items()
+            key: store_as_blob(path, value)
+            for key, value in directory.directories.items()
         },
         "files": {
-            key: file.store_as_blob(directory, value)
-            for key, value in tree.files.items()
+            key: file.store_as_blob(path, value)
+            for key, value in directory.files.items()
         },
     }
 
-    return fs.store_dict_as_blob(directory, data)
+    return fs.store_dict_as_blob(path, data)
 
 
-def load_from_blob(directory: Path, hashid: str) -> Directory:
-    data = fs.load_blob_as_dict(directory, hashid)
+def load_from_blob(path: Path, hashid: str) -> Directory:
+    data = fs.load_blob_as_dict(path, hashid)
 
     data["directories"] = {
-        key: load_from_blob(directory, value)
+        key: load_from_blob(path, value)
         for key, value in data["directories"].items()
     }
 
     data["files"] = {
-        key: file.load_from_blob(directory, value)
+        key: file.load_from_blob(path, value)
         for key, value in data["files"].items()
     }
 
     return Directory(**data)
 
 
-def serialize_as_hashid(tree: Directory) -> str:
+def serialize_as_hashid(directory: Directory) -> str:
     data = {
         "directories": {
             key: serialize_as_hashid(value)
-            for key, value in tree.directories.items()
+            for key, value in directory.directories.items()
         },
         "files": {
             key: file.serialize_as_hashid(value)
-            for key, value in tree.files.items()
+            for key, value in directory.files.items()
         },
     }
 
     return transform.dict_as_hashid(data)
 
 
-def serialize_as_dict(tree: Directory) -> Dict[str, Any]:
+def serialize_as_dict(directory: Directory) -> Dict[str, Any]:
     return {
-        **transform.as_dict(tree),
+        **transform.as_dict(directory),
         "directories": {
             key: serialize_as_dict(value)
-            for key, value in tree.directories.items()
+            for key, value in directory.directories.items()
         },
         "files": {
             key: file.serialize_as_dict(value)
-            for key, value in tree.files.items()
+            for key, value in directory.files.items()
         },
     }
 
 
-def transform_tree_as_list(path: Path, tree: Directory) -> List[File]:
+def transform_as_list(path: Path, directory: Directory) -> List[File]:
     files: List[File] = []
 
-    for key, value in tree.directories.items():
-        files = files + transform_tree_as_list(path.joinpath(key), value)
+    for key, value in directory.directories.items():
+        files = files + transform_as_list(path.joinpath(key), value)
 
     files = files + [
         File(path.joinpath(key), value.is_blob, value.blob_path, value.hashid)
-        for key, value in tree.files.items()
+        for key, value in directory.files.items()
     ]
 
     return files
 
 
-def transform_list_as_tree(path: Path, paths: List[File]) -> Directory:
+def transform_from_list(path: Path, paths: List[File]) -> Directory:
     result = Directory()
 
     for item_instance in paths:
@@ -106,7 +106,7 @@ def transform_list_as_tree(path: Path, paths: List[File]) -> Directory:
             if first_segment not in result.directories.keys():
                 next_path = path.joinpath(first_segment)
 
-                result.directories[first_segment] = transform_list_as_tree(
+                result.directories[first_segment] = transform_from_list(
                     next_path,
                     [
                         x
@@ -124,7 +124,7 @@ def transform_list_as_tree(path: Path, paths: List[File]) -> Directory:
 def load_from_directory_path(
     current_path: Path, patterns: List[str] = []
 ) -> Directory:
-    tree = Directory({}, {})
+    directory = Directory({}, {})
 
     # load ignore pattern
     patterns = [*patterns, *fs.load_ignore_file_as_patterns(current_path)]
@@ -134,14 +134,14 @@ def load_from_directory_path(
 
         if item_path.is_file():
             if filters.patterns_filter(name, patterns):
-                tree.files[name] = File(item_path)
+                directory.files[name] = File(item_path)
         elif item_path.is_dir():
             result = load_from_directory_path(item_path, patterns)
 
             if result.files or result.directories:
-                tree.directories[name] = result
+                directory.directories[name] = result
 
-    return tree
+    return directory
 
 
 def compare(path: Path, old: Directory, new: Directory) -> Differences:
@@ -175,9 +175,9 @@ def compare(path: Path, old: Directory, new: Directory) -> Differences:
             differences_instance.differences.append(
                 FileAddedDifference(File(file_path))
             )
-        elif file.serialize_as_hashid(
-            value
-        ) != file.serialize_as_hashid(old.files[key]):
+        elif file.serialize_as_hashid(value) != file.serialize_as_hashid(
+            old.files[key]
+        ):
             differences_instance.differences.append(
                 FileUpdatedDifference(File(file_path))
             )

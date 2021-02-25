@@ -225,7 +225,7 @@ def get_commit_from_head(path: Path) -> Commit:
 
 
 def get_tree_from_commit(path: Path, commit: Commit) -> Directory:
-    return tree.load_from_blob(get_blobs_path(path), commit.tree_hashid)
+    return directory.load_from_blob(get_blobs_path(path), commit.tree_hashid)
 
 
 def checkout(path: Path, name: str) -> None:
@@ -270,15 +270,13 @@ def create_commit(
     if previous_commits_hashids is None:
         previous_commits_hashids = []
 
-    tree_hashid = tree.store_as_blob(get_blobs_path(path), tree_instance)
+    tree_hashid = directory.store_as_blob(get_blobs_path(path), tree_instance)
 
     commit_instance = Commit(
         author, message, tree_hashid, previous_commits_hashids
     )
 
-    commit_hashid = commit.store_as_blob(
-        get_blobs_path(path), commit_instance
-    )
+    commit_hashid = commit.store_as_blob(get_blobs_path(path), commit_instance)
 
     branch_instance = Branch(commit_hashid)
 
@@ -381,9 +379,9 @@ if __name__ == "__main__":
     # except FileNotFoundError:
     #     tree_instance = Directory()
 
-    # working_tree_instance = tree.get_tree(test_directory)
+    # working_tree_instance = directory.get_tree(test_directory)
 
-    # differences_instance = tree.compare_trees(
+    # differences_instance = directory.compare_trees(
     #     test_directory, working_tree_instance, tree_instance
     # )
 
@@ -403,7 +401,7 @@ if __name__ == "__main__":
 
     stage_instance = get_stage(test_directory)
 
-    tree_list = tree.transform_tree_as_list(test_directory, tree_instance)
+    tree_list = directory.transform_tree_as_list(test_directory, tree_instance)
 
     updated_tree_list = apply_additive_changes(
         test_directory,
@@ -415,7 +413,9 @@ if __name__ == "__main__":
         test_directory, updated_tree_list, stage_instance.removed_files
     )
 
-    commit_tree = tree.transform_list_as_tree(test_directory, updated_tree_list)
+    commit_tree = directory.transform_list_as_tree(
+        test_directory, updated_tree_list
+    )
 
     author_instance = Author(
         "beesperester", "Bernhard Esperester", "bernhard@esperester.de"
@@ -437,7 +437,7 @@ if __name__ == "__main__":
     # transform.apply(print, updated_tree_list)
 
     # print("before")
-    # transform.apply(print, tree.tree_as_list(test_directory, tree_instance))
+    # transform.apply(print, directory.tree_as_list(test_directory, tree_instance))
 
     # apply_added_files_changes(
     #     test_directory,
@@ -454,7 +454,7 @@ if __name__ == "__main__":
     # apply_removed_files_changes(test_directory, tree_instance, test_paths)
 
     # print("after")
-    # transform.apply(print, tree.tree_as_list(test_directory, tree_instance))
+    # transform.apply(print, directory.tree_as_list(test_directory, tree_instance))
 
     # added_files_tree = tree_from_list(
     #     test_directory,
