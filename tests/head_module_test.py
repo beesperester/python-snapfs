@@ -29,7 +29,7 @@ class TestHeadModule(unittest.TestCase):
 
         head_instance = Head()
 
-        head.store_head_as_file(file_path, head_instance)
+        head.store_as_file(file_path, head_instance)
 
         with open(file_path, "r") as f:
             result = f.read()
@@ -41,10 +41,10 @@ class TestHeadModule(unittest.TestCase):
 
         head_instance = Head()
 
-        head.store_head_as_file(file_path, head_instance)
+        head.store_as_file(file_path, head_instance)
 
-        expected_result = head.serialize_head_as_dict(head_instance)
-        result = head.serialize_head_as_dict(head.load_file_as_head(file_path))
+        expected_result = head.serialize_as_dict(head_instance)
+        result = head.serialize_as_dict(head.load_from_file(file_path))
 
         self.assertEqual(result, expected_result)
 
@@ -53,6 +53,6 @@ class TestHeadModule(unittest.TestCase):
 
         head_instance = Head()
 
-        result = head.serialize_head_as_dict(head_instance)
+        result = head.serialize_as_dict(head_instance)
 
         self.assertDictEqual(result, expected_result)

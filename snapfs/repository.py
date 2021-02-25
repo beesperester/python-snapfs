@@ -114,19 +114,19 @@ def get_commit_path(path: Path, commit_hashid: str, test: bool = True) -> Path:
 
 # module helpers
 def get_head(path: Path) -> Head:
-    return head.load_file_as_head(get_head_path(path))
+    return head.load_from_file(get_head_path(path))
 
 
 def store_head(path: Path, head_instance: Head) -> None:
-    head.store_head_as_file(get_head_path(path, False), head_instance)
+    head.store_as_file(get_head_path(path, False), head_instance)
 
 
 def get_branch(path: Path, name: str) -> Branch:
-    return branch.load_file_as_branch(get_branch_path(path, name))
+    return branch.load_from_file(get_branch_path(path, name))
 
 
 def get_tag(path: Path, name: str) -> Tag:
-    return tag.load_file_as_tag(get_tag_path(path, name))
+    return tag.load_from_file(get_tag_path(path, name))
 
 
 def get_reference(path: Path) -> Reference:
@@ -142,7 +142,7 @@ def get_reference(path: Path) -> Reference:
 
 
 def get_commit(path: Path, commit_hashid: str) -> Commit:
-    return commit.load_blob_as_commit(get_commit_path(path, commit_hashid))
+    return commit.load_from_blob(get_commit_path(path, commit_hashid))
 
 
 def get_latest_commit(path: Path) -> Commit:
@@ -152,11 +152,11 @@ def get_latest_commit(path: Path) -> Commit:
 
 
 def get_stage(path: Path) -> Stage:
-    return stage.load_file_as_stage(get_stage_path(path))
+    return stage.load_from_file(get_stage_path(path))
 
 
 def store_stage(path: Path, stage_instance: Stage) -> None:
-    stage.store_stage_as_file(get_stage_path(path, False), stage_instance)
+    stage.store_as_file(get_stage_path(path, False), stage_instance)
 
 
 def get_directory_accessors() -> List[Callable]:

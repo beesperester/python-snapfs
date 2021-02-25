@@ -108,7 +108,7 @@ class TestRepositoryModule(unittest.TestCase):
     def test_get_head(self):
         head_instance = Head()
 
-        expected_result = head.serialize_head_as_dict(head_instance)
+        expected_result = head.serialize_as_dict(head_instance)
 
         result = {}
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -118,16 +118,16 @@ class TestRepositoryModule(unittest.TestCase):
 
             makedirs(head_path.parent, exist_ok=True)
 
-            head.store_head_as_file(head_path, head_instance)
+            head.store_as_file(head_path, head_instance)
 
-            result = head.serialize_head_as_dict(repository.get_head(tmppath))
+            result = head.serialize_as_dict(repository.get_head(tmppath))
 
         self.assertEqual(result, expected_result)
 
     def test_get_branch(self):
         branch_instance = Branch()
 
-        expected_result = branch.serialize_branch_as_dict(branch_instance)
+        expected_result = branch.serialize_as_dict(branch_instance)
 
         result = {}
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -137,9 +137,9 @@ class TestRepositoryModule(unittest.TestCase):
 
             makedirs(branch_path.parent, exist_ok=True)
 
-            branch.store_branch_as_file(branch_path, branch_instance)
+            branch.store_as_file(branch_path, branch_instance)
 
-            result = branch.serialize_branch_as_dict(
+            result = branch.serialize_as_dict(
                 repository.get_branch(tmppath, "main")
             )
 
@@ -148,7 +148,7 @@ class TestRepositoryModule(unittest.TestCase):
     def test_get_tag(self):
         tag_instance = Tag()
 
-        expected_result = tag.serialize_tag_as_dict(tag_instance)
+        expected_result = tag.serialize_as_dict(tag_instance)
 
         result = {}
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -158,9 +158,9 @@ class TestRepositoryModule(unittest.TestCase):
 
             makedirs(tag_path.parent, exist_ok=True)
 
-            tag.store_tag_as_file(tag_path, tag_instance)
+            tag.store_as_file(tag_path, tag_instance)
 
-            result = tag.serialize_tag_as_dict(
+            result = tag.serialize_as_dict(
                 repository.get_tag(tmppath, "v1.0.0")
             )
 
@@ -170,7 +170,7 @@ class TestRepositoryModule(unittest.TestCase):
         branch_instance = Branch()
         head_instance = Head("references/branches/main")
 
-        expected_result = branch.serialize_branch_as_dict(branch_instance)
+        expected_result = branch.serialize_as_dict(branch_instance)
 
         result = {}
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -181,16 +181,16 @@ class TestRepositoryModule(unittest.TestCase):
 
             makedirs(branch_path.parent, exist_ok=True)
 
-            branch.store_branch_as_file(branch_path, branch_instance)
+            branch.store_as_file(branch_path, branch_instance)
 
             # store head
             head_path = repository.get_head_path(tmppath, False)
 
             makedirs(head_path.parent, exist_ok=True)
 
-            head.store_head_as_file(head_path, head_instance)
+            head.store_as_file(head_path, head_instance)
 
-            result = reference.serialize_reference_as_dict(
+            result = reference.serialize_as_dict(
                 repository.get_reference(tmppath)
             )
 
@@ -201,7 +201,7 @@ class TestRepositoryModule(unittest.TestCase):
 
         commit_instance = Commit(author_instance, "initial commit")
 
-        expected_result = commit.serialize_commit_as_dict(commit_instance)
+        expected_result = commit.serialize_as_dict(commit_instance)
 
         result = {}
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -211,10 +211,10 @@ class TestRepositoryModule(unittest.TestCase):
 
             makedirs(blobs_path, exist_ok=True)
 
-            hashid = commit.store_commit_as_blob(blobs_path, commit_instance)
+            hashid = commit.store_as_blob(blobs_path, commit_instance)
 
-            result = commit.serialize_commit_as_dict(
-                commit.load_blob_as_commit(
+            result = commit.serialize_as_dict(
+                commit.load_from_blob(
                     repository.get_commit_path(tmppath, hashid)
                 )
             )
@@ -226,7 +226,7 @@ class TestRepositoryModule(unittest.TestCase):
 
         commit_instance = Commit(author_instance, "initial commit")
 
-        expected_result = commit.serialize_commit_as_dict(commit_instance)
+        expected_result = commit.serialize_as_dict(commit_instance)
 
         result = {}
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -237,7 +237,7 @@ class TestRepositoryModule(unittest.TestCase):
 
             makedirs(blobs_path, exist_ok=True)
 
-            hashid = commit.store_commit_as_blob(blobs_path, commit_instance)
+            hashid = commit.store_as_blob(blobs_path, commit_instance)
 
             # create branch with commit hashid
             branch_path = repository.get_branch_path(tmppath, "main", False)
@@ -246,7 +246,7 @@ class TestRepositoryModule(unittest.TestCase):
 
             branch_instance = Branch(hashid)
 
-            branch.store_branch_as_file(branch_path, branch_instance)
+            branch.store_as_file(branch_path, branch_instance)
 
             # create head with branch as ref
             head_path = repository.get_head_path(tmppath, False)
@@ -255,9 +255,9 @@ class TestRepositoryModule(unittest.TestCase):
 
             head_instance = Head("references/branches/main")
 
-            head.store_head_as_file(head_path, head_instance)
+            head.store_as_file(head_path, head_instance)
 
-            result = commit.serialize_commit_as_dict(
+            result = commit.serialize_as_dict(
                 repository.get_latest_commit(tmppath)
             )
 

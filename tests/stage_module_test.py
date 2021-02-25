@@ -31,7 +31,7 @@ class TestStageModule(unittest.TestCase):
 
         stage_instance = Stage()
 
-        stage.store_stage_as_file(file_path, stage_instance)
+        stage.store_as_file(file_path, stage_instance)
 
         with open(file_path, "r") as f:
             result = json.load(f)
@@ -47,7 +47,7 @@ class TestStageModule(unittest.TestCase):
 
         stage_instance = Stage()
 
-        result = stage.serialize_stage_as_dict(stage_instance)
+        result = stage.serialize_as_dict(stage_instance)
 
         self.assertDictEqual(result, expected_result)
 
@@ -58,8 +58,8 @@ class TestStageModule(unittest.TestCase):
             "removed_files": [],
         }
 
-        result = stage.serialize_stage_as_dict(
-            stage.deserialize_dict_as_stage(expected_result)
+        result = stage.serialize_as_dict(
+            stage.deserialize_from_dict(expected_result)
         )
 
         self.assertDictEqual(result, expected_result)
@@ -75,10 +75,10 @@ class TestStageModule(unittest.TestCase):
 
         stage_instance = Stage()
 
-        stage.store_stage_as_file(file_path, stage_instance)
+        stage.store_as_file(file_path, stage_instance)
 
-        result = stage.serialize_stage_as_dict(
-            stage.load_file_as_stage(file_path)
+        result = stage.serialize_as_dict(
+            stage.load_from_file(file_path)
         )
 
         self.assertDictEqual(result, expected_result)

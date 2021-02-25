@@ -114,11 +114,11 @@ def get_tags(path: Path) -> List[Tag]:
 
 
 def get_stage(path: Path) -> Stage:
-    return stage.load_file_as_stage(get_stage_path(path))
+    return stage.load_from_file(get_stage_path(path))
 
 
 def store_stage(path: Path, stage_instance: Stage) -> None:
-    stage.store_stage_as_file(get_stage_path(path, False), stage_instance)
+    stage.store_as_file(get_stage_path(path, False), stage_instance)
 
 
 def stage_differences(
@@ -150,11 +150,11 @@ def stage_differences(
 
 
 def get_head(path: Path) -> Head:
-    return head.load_file_as_head(get_head_path(path))
+    return head.load_from_file(get_head_path(path))
 
 
 def store_head(path: Path, head_instance: Head) -> None:
-    head.store_head_as_file(get_head_path(path, False), head_instance)
+    head.store_as_file(get_head_path(path, False), head_instance)
 
 
 def get_branch_path(path: Path, name: str, test: bool = True) -> Path:
@@ -182,7 +182,7 @@ def get_commit_path(path: Path, hashid: str, test: bool = True) -> Path:
 
 
 def get_commit(path: Path, hashid: str) -> Commit:
-    return commit.load_blob_as_commit(get_commit_path(path, hashid))
+    return commit.load_from_blob(get_commit_path(path, hashid))
 
 
 def branch_name_from_ref(ref: str) -> str:
@@ -225,7 +225,7 @@ def get_commit_from_head(path: Path) -> Commit:
 
 
 def get_tree_from_commit(path: Path, commit: Commit) -> Directory:
-    return tree.load_blob_as_tree(get_blobs_path(path), commit.tree_hashid)
+    return tree.load_from_blob(get_blobs_path(path), commit.tree_hashid)
 
 
 def checkout(path: Path, name: str) -> None:
@@ -270,13 +270,13 @@ def create_commit(
     if previous_commits_hashids is None:
         previous_commits_hashids = []
 
-    tree_hashid = tree.store_tree_as_blob(get_blobs_path(path), tree_instance)
+    tree_hashid = tree.store_as_blob(get_blobs_path(path), tree_instance)
 
     commit_instance = Commit(
         author, message, tree_hashid, previous_commits_hashids
     )
 
-    commit_hashid = commit.store_commit_as_blob(
+    commit_hashid = commit.store_as_blob(
         get_blobs_path(path), commit_instance
     )
 
@@ -403,7 +403,7 @@ if __name__ == "__main__":
 
     stage_instance = get_stage(test_directory)
 
-    tree_list = tree.tree_as_list(test_directory, tree_instance)
+    tree_list = tree.transform_tree_as_list(test_directory, tree_instance)
 
     updated_tree_list = apply_additive_changes(
         test_directory,
@@ -415,7 +415,7 @@ if __name__ == "__main__":
         test_directory, updated_tree_list, stage_instance.removed_files
     )
 
-    commit_tree = tree.list_as_tree(test_directory, updated_tree_list)
+    commit_tree = tree.transform_list_as_tree(test_directory, updated_tree_list)
 
     author_instance = Author(
         "beesperester", "Bernhard Esperester", "bernhard@esperester.de"

@@ -29,7 +29,7 @@ class TestTagModule(unittest.TestCase):
         result = ""
         expected_result = transform.dict_as_json(data)
 
-        tag.store_tag_as_file(file_path, tag_instance)
+        tag.store_as_file(file_path, tag_instance)
 
         with open(file_path, "r") as f:
             result = f.read()
@@ -42,11 +42,11 @@ class TestTagModule(unittest.TestCase):
         tag_instance = Tag()
 
         result = {}
-        expected_result = tag.serialize_tag_as_dict(tag_instance)
+        expected_result = tag.serialize_as_dict(tag_instance)
 
-        tag.store_tag_as_file(file_path, tag_instance)
+        tag.store_as_file(file_path, tag_instance)
 
-        result = tag.serialize_tag_as_dict(tag.load_file_as_tag(file_path))
+        result = tag.serialize_as_dict(tag.load_from_file(file_path))
 
         self.assertDictEqual(result, expected_result)
 
@@ -56,7 +56,7 @@ class TestTagModule(unittest.TestCase):
         tag_instance = Tag()
 
         expected_result = data
-        result = tag.serialize_tag_as_dict(tag_instance)
+        result = tag.serialize_as_dict(tag_instance)
 
         self.assertDictEqual(result, expected_result)
 
@@ -64,6 +64,6 @@ class TestTagModule(unittest.TestCase):
         data = {"message": "", "commit_hashid": ""}
 
         expected_result = data
-        result = tag.serialize_tag_as_dict(tag.deserialize_dict_as_tag(data))
+        result = tag.serialize_as_dict(tag.deserialize_from_dict(data))
 
         self.assertDictEqual(result, expected_result)

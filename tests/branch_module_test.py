@@ -29,7 +29,7 @@ class TestBranchModule(unittest.TestCase):
         result = ""
         expected_result = transform.dict_as_json(data)
 
-        branch.store_branch_as_file(file_path, branch_instance)
+        branch.store_as_file(file_path, branch_instance)
 
         with open(file_path, "r") as f:
             result = f.read()
@@ -42,12 +42,12 @@ class TestBranchModule(unittest.TestCase):
         branch_instance = Branch()
 
         result = {}
-        expected_result = branch.serialize_branch_as_dict(branch_instance)
+        expected_result = branch.serialize_as_dict(branch_instance)
 
-        branch.store_branch_as_file(file_path, branch_instance)
+        branch.store_as_file(file_path, branch_instance)
 
-        result = branch.serialize_branch_as_dict(
-            branch.load_file_as_branch(file_path)
+        result = branch.serialize_as_dict(
+            branch.load_from_file(file_path)
         )
 
         self.assertDictEqual(result, expected_result)
@@ -58,7 +58,7 @@ class TestBranchModule(unittest.TestCase):
         branch_instance = Branch()
 
         expected_result = data
-        result = branch.serialize_branch_as_dict(branch_instance)
+        result = branch.serialize_as_dict(branch_instance)
 
         self.assertDictEqual(result, expected_result)
 
@@ -66,8 +66,8 @@ class TestBranchModule(unittest.TestCase):
         data = {"commit_hashid": ""}
 
         expected_result = data
-        result = branch.serialize_branch_as_dict(
-            branch.deserialize_dict_as_branch(data)
+        result = branch.serialize_as_dict(
+            branch.deserialize_from_dict(data)
         )
 
         self.assertDictEqual(result, expected_result)

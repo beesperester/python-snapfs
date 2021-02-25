@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List
 
 
-from snapfs import file, transform, differences
+from snapfs import file, transform, differences, difference
 from snapfs.datatypes import (
     File,
     Differences,
@@ -33,7 +33,7 @@ class TestDifferencesModule(unittest.TestCase):
         ]
 
         result = [
-            differences.serialize_difference_as_message(x)
+            difference.serialize_as_message(x)
             for x in differences_instance.differences
         ]
 
@@ -56,22 +56,20 @@ class TestDifferencesModule(unittest.TestCase):
             "differences": [
                 {
                     "type": "FileAddedDifference",
-                    "file": file.serialize_file_as_dict(file_added_instance),
+                    "file": file.serialize_as_dict(file_added_instance),
                 },
                 {
                     "type": "FileUpdatedDifference",
-                    "file": file.serialize_file_as_dict(file_updated_instance),
+                    "file": file.serialize_as_dict(file_updated_instance),
                 },
                 {
                     "type": "FileRemovedDifference",
-                    "file": file.serialize_file_as_dict(file_removed_instance),
+                    "file": file.serialize_as_dict(file_removed_instance),
                 },
             ]
         }
 
-        result = differences.serialize_differences_as_dict(
-            differences_instance
-        )
+        result = differences.serialize_as_dict(differences_instance)
 
         self.assertDictEqual(result, expected_result)
 
@@ -81,10 +79,10 @@ class TestDifferencesModule(unittest.TestCase):
 
         expected_result = {
             "type": "FileAddedDifference",
-            "file": file.serialize_file_as_dict(file_instance),
+            "file": file.serialize_as_dict(file_instance),
         }
 
-        result = differences.serialize_difference_as_dict(difference_instance)
+        result = difference.serialize_as_dict(difference_instance)
 
         self.assertDictEqual(result, expected_result)
 
@@ -93,13 +91,13 @@ class TestDifferencesModule(unittest.TestCase):
 
         data = {
             "type": "FileAddedDifference",
-            "file": file.serialize_file_as_dict(file_instance),
+            "file": file.serialize_as_dict(file_instance),
         }
 
         expected_result = data
 
-        result = differences.serialize_difference_as_dict(
-            differences.deserialize_dict_as_difference(data)
+        result = difference.serialize_as_dict(
+            difference.deserialize_from_dict(data)
         )
 
         self.assertDictEqual(result, expected_result)

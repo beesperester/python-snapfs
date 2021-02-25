@@ -28,31 +28,31 @@ class TestCommitModule(unittest.TestCase):
     def test_file_datatype(self):
 
         self.assertDictEqual(
-            file.serialize_file_as_dict(file_instance),
+            file.serialize_as_dict(file_instance),
             expected_result,
         )
 
     def test_serialize_file_as_hashid(self):
         self.assertEqual(
-            file.serialize_file_as_hashid(file_instance),
+            file.serialize_as_hashid(file_instance),
             transform.bytes_as_hashid(file_contents),
         )
 
     def test_serialize_file_as_dict(self):
         self.assertEqual(
-            file.serialize_file_as_dict(file_instance), expected_result
+            file.serialize_as_dict(file_instance), expected_result
         )
 
     def test_deserialize_dict_as_file(self):
-        result = file.deserialize_dict_as_file(expected_result)
+        result = file.deserialize_from_dict(expected_result)
 
-        self.assertEqual(file.serialize_file_as_dict(result), expected_result)
+        self.assertEqual(file.serialize_as_dict(result), expected_result)
 
     def test_store_file_as_blob(self):
         file_hashid = ""
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            file_hashid = file.store_file_as_blob(
+            file_hashid = file.store_as_blob(
                 Path(tmpdirname), file_instance
             )
 
@@ -65,11 +65,11 @@ class TestCommitModule(unittest.TestCase):
         file_hashid = ""
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            file_hashid = file.store_file_as_blob(
+            file_hashid = file.store_as_blob(
                 Path(tmpdirname), file_instance
             )
 
-            result_file_instance = file.load_blob_as_file(
+            result_file_instance = file.load_from_blob(
                 Path(tmpdirname), file_hashid
             )
 
@@ -85,6 +85,6 @@ class TestCommitModule(unittest.TestCase):
         )
 
         self.assertEqual(
-            file.serialize_file_as_dict(result_file_instance),
-            file.serialize_file_as_dict(expected_result_file_instance),
+            file.serialize_as_dict(result_file_instance),
+            file.serialize_as_dict(expected_result_file_instance),
         )

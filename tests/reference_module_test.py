@@ -25,6 +25,6 @@ class TestReferenceModule(unittest.TestCase):
         reference_instance = Reference()
 
         expected_result = data
-        result = reference.serialize_reference_as_dict(reference_instance)
+        result = reference.serialize_as_dict(reference_instance)
 
         self.assertDictEqual(result, expected_result)

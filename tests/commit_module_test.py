@@ -24,7 +24,7 @@ commit_instance = Commit(author_instance, "initial commit")
 class TestCommitModule(unittest.TestCase):
     def test_commit_datatype(self):
         self.assertDictEqual(
-            commit.serialize_commit_as_dict(commit_instance),
+            commit.serialize_as_dict(commit_instance),
             expected_result,
         )
 
@@ -32,7 +32,7 @@ class TestCommitModule(unittest.TestCase):
         commit_hashid = ""
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            commit_hashid = commit.store_commit_as_blob(
+            commit_hashid = commit.store_as_blob(
                 Path(tmpdirname), commit_instance
             )
 
@@ -47,16 +47,16 @@ class TestCommitModule(unittest.TestCase):
         commit_dict = {}
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            commit_hashid = commit.store_commit_as_blob(
+            commit_hashid = commit.store_as_blob(
                 Path(tmpdirname), commit_instance
             )
 
-            commit_dict = commit.load_blob_as_commit(
+            commit_dict = commit.load_from_blob(
                 Path(tmpdirname).joinpath(
                     transform.hashid_as_path(commit_hashid)
                 )
             )
 
         self.assertDictEqual(
-            commit.serialize_commit_as_dict(commit_dict), expected_result
+            commit.serialize_as_dict(commit_dict), expected_result
         )
