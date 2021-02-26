@@ -1,103 +1,84 @@
 import unittest
 import tempfile
+import json
 
 from pathlib import Path
 from typing import List
 
 
-from snapfs import file, transform, differences, difference
-from snapfs.datatypes import (
-    File,
-    Differences,
-    Difference,
-    FileAddedDifference,
-    FileRemovedDifference,
-    FileUpdatedDifference,
-)
+from snapfs import fs, transform, differences
+from snapfs.datatypes import Differences, File
+
+
+def get_named_tmpfile_path():
+    tmpfile = tempfile.NamedTemporaryFile(mode="wb", delete=False)
+    # tmpfile.write(file_contents)
+    tmpfile.close()
+
+    return Path(tmpfile.name)
 
 
 class TestDifferencesModule(unittest.TestCase):
-    def test_serialize_difference_as_message(self):
-        differences_instance = Differences(
-            [
-                FileAddedDifference(File(Path("foo.txt"))),
-                FileUpdatedDifference(File(Path("bar.txt"))),
-                FileRemovedDifference(File(Path("foobar.txt"))),
-            ]
-        )
+    def test_store_differences_as_file(self):
+        file_path = get_named_tmpfile_path()
 
-        expected_result = [
-            "added: foo.txt",
-            "updated: bar.txt",
-            "removed: foobar.txt",
-        ]
+        result = {}
+        expected_result = {
+            "added_files": [],
+            "updated_files": [],
+            "removed_files": [],
+        }
 
-        result = [
-            difference.serialize_as_message(x)
-            for x in differences_instance.differences
-        ]
+        differences_instance = Differences()
 
-        self.assertListEqual(result, expected_result)
+        differences.store_as_file(file_path, differences_instance)
+
+        with open(file_path, "r") as f:
+            result = json.load(f)
+
+        self.assertDictEqual(result, expected_result)
 
     def test_serialize_differences_as_dict(self):
-        file_added_instance = File(Path("foo.txt"))
-        file_updated_instance = File(Path("bar.txt"))
-        file_removed_instance = File(Path("foobar.txt"))
-
-        differences_instance = Differences(
-            [
-                FileAddedDifference(file_added_instance),
-                FileUpdatedDifference(file_updated_instance),
-                FileRemovedDifference(file_removed_instance),
-            ]
-        )
-
         expected_result = {
-            "differences": [
-                {
-                    "type": "FileAddedDifference",
-                    "file": file.serialize_as_dict(file_added_instance),
-                },
-                {
-                    "type": "FileUpdatedDifference",
-                    "file": file.serialize_as_dict(file_updated_instance),
-                },
-                {
-                    "type": "FileRemovedDifference",
-                    "file": file.serialize_as_dict(file_removed_instance),
-                },
-            ]
+            "added_files": [],
+            "updated_files": [],
+            "removed_files": [],
         }
+
+        differences_instance = Differences()
 
         result = differences.serialize_as_dict(differences_instance)
 
         self.assertDictEqual(result, expected_result)
 
-    def test_serialize_difference_as_dict(self):
-        file_instance = File(Path("foobar.txt"))
-        difference_instance = FileAddedDifference(file_instance)
-
+    def test_deserialize_dict_as_differences(self):
         expected_result = {
-            "type": "FileAddedDifference",
-            "file": file.serialize_as_dict(file_instance),
+            "added_files": [],
+            "updated_files": [],
+            "removed_files": [],
         }
 
-        result = difference.serialize_as_dict(difference_instance)
+        result = differences.serialize_as_dict(
+            differences.deserialize_from_dict(expected_result)
+        )
 
         self.assertDictEqual(result, expected_result)
 
-    def test_deserialize_dict_as_difference(self):
-        file_instance = File(Path("foobar.txt"))
+    def test_load_file_as_differences(self):
+        file_path = get_named_tmpfile_path()
 
-        data = {
-            "type": "FileAddedDifference",
-            "file": file.serialize_as_dict(file_instance),
+        expected_result = {
+            "added_files": [],
+            "updated_files": [],
+            "removed_files": [],
         }
 
-        expected_result = data
+        differences_instance = Differences()
 
-        result = difference.serialize_as_dict(
-            difference.deserialize_from_dict(data)
+        differences.store_as_file(file_path, differences_instance)
+
+        result = differences.serialize_as_dict(
+            differences.load_from_file(file_path)
         )
 
         self.assertDictEqual(result, expected_result)

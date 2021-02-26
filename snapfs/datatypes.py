@@ -69,31 +69,7 @@ class Stage:
 
 
 @dataclass
-class Difference:
-    file: File
-
-
-@dataclass
-class FileAddedDifference(Difference):
+class Differences(Stage):
     """
-    This class represents a file added message
+    This class represents the differences in the working directory
     """
-
-
-@dataclass
-class FileUpdatedDifference(Difference):
-    """
-    This class represents a file updated message
-    """
-
-
-@dataclass
-class FileRemovedDifference(Difference):
-    """
-    This class represents a file removed message
-    """
-
-
-@dataclass
-class Differences:
-    differences: List[Difference] = field(default_factory=list)

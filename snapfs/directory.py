@@ -5,15 +5,8 @@ from pathlib import Path
 
 from typing import Dict, Any, List, Optional, Tuple
 
-from snapfs import fs, transform, file, filters
-from snapfs.datatypes import (
-    File,
-    Directory,
-    Differences,
-    FileAddedDifference,
-    FileUpdatedDifference,
-    FileRemovedDifference,
-)
+from snapfs import fs, transform, file, filters, differences
+from snapfs.datatypes import File, Directory, Differences
 
 
 def store_as_blob(path: Path, directory: Directory) -> str:
@@ -133,7 +126,7 @@ def load_from_directory_path(
         item_path = Path(os.path.join(current_path, name))
 
         if item_path.is_file():
-            if filters.patterns_filter(name, patterns):
+            if not filters.ignore(name, patterns):
                 directory.files[name] = File(item_path)
         elif item_path.is_dir():
             result = load_from_directory_path(item_path, patterns)
@@ -149,22 +142,14 @@ def compare(path: Path, old: Directory, new: Directory) -> Differences:
 
     for key, value in new.directories.items():
         if key not in old.directories.keys():
-            differences_instance = Differences(
-                [
-                    *differences_instance.differences,
-                    *compare(
-                        path.joinpath(key), Directory({}, {}), value
-                    ).differences,
-                ]
+            differences_instance = differences.merge_differences(
+                differences_instance,
+                compare(path.joinpath(key), Directory({}, {}), value),
             )
         else:
-            differences_instance = Differences(
-                [
-                    *differences_instance.differences,
-                    *compare(
-                        path.joinpath(key), old.directories[key], value
-                    ).differences,
-                ]
+            differences_instance = differences.merge_differences(
+                differences_instance,
+                compare(path.joinpath(key), old.directories[key], value),
             )
 
     # test for added or updated files
@@ -172,23 +157,17 @@ def compare(path: Path, old: Directory, new: Directory) -> Differences:
         file_path = path.joinpath(key)
 
         if key not in old.files.keys():
-            differences_instance.differences.append(
-                FileAddedDifference(File(file_path))
-            )
+            differences_instance.added_files.append(File(file_path))
         elif file.serialize_as_hashid(value) != file.serialize_as_hashid(
             old.files[key]
         ):
-            differences_instance.differences.append(
-                FileUpdatedDifference(File(file_path))
-            )
+            differences_instance.updated_files.append(File(file_path))
 
     # test for removed files
     for key, value in old.files.items():
         file_path = path.joinpath(key)
 
         if key not in new.files.keys():
-            differences_instance.differences.append(
-                FileRemovedDifference(File(file_path))
-            )
+            differences_instance.removed_files.append(File(file_path))
 
     return differences_instance

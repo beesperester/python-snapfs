@@ -16,9 +16,8 @@ from snapfs import (
     directory,
     file,
     differences,
-    difference,
 )
-from snapfs.datatypes import File, Directory, Difference
+from snapfs.datatypes import File, Directory
 
 
 def get_named_tmpfile_path() -> Path:
@@ -208,10 +207,7 @@ class TestTreeModule(unittest.TestCase):
             Path(), directory_old_instance, directory_new_instance
         )
 
-        expected_result = ["removed: a/file_c.txt", "added: b/file_b.txt"]
-        result = [
-            difference.serialize_as_message(x)
-            for x in differences_instance.differences
-        ]
+        expected_result = ["added: b/file_b.txt", "removed: a/file_c.txt"]
+        result = differences.serialize_as_messages(differences_instance)
 
         self.assertListEqual(result, expected_result)
