@@ -19,7 +19,7 @@ def get_named_tmpfile_path():
 
 
 class TestTagModule(unittest.TestCase):
-    def test_store_tag_as_file(self):
+    def test_store_as_file(self):
         file_path = get_named_tmpfile_path()
 
         tag_instance = Tag()
@@ -36,7 +36,7 @@ class TestTagModule(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_load_file_as_tag(self):
+    def test_load_from_file(self):
         file_path = get_named_tmpfile_path()
 
         tag_instance = Tag()
@@ -50,7 +50,7 @@ class TestTagModule(unittest.TestCase):
 
         self.assertDictEqual(result, expected_result)
 
-    def test_serialize_tag_as_dict(self):
+    def test_serialize_as_dict(self):
         data = {"message": "", "commit_hashid": ""}
 
         tag_instance = Tag()
@@ -60,7 +60,7 @@ class TestTagModule(unittest.TestCase):
 
         self.assertDictEqual(result, expected_result)
 
-    def test_deserialize_dict_as_tag(self):
+    def test_deserialize_from_dict(self):
         data = {"message": "", "commit_hashid": ""}
 
         expected_result = data

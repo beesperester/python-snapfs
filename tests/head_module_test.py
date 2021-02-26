@@ -19,7 +19,7 @@ def get_named_tmpfile_path():
 
 
 class TestHeadModule(unittest.TestCase):
-    def test_store_head_as_file(self):
+    def test_store_as_file(self):
         file_path = get_named_tmpfile_path()
 
         data = {"ref": ""}
@@ -36,7 +36,7 @@ class TestHeadModule(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_load_file_as_head(self):
+    def test_load_from_file(self):
         file_path = get_named_tmpfile_path()
 
         head_instance = Head()
@@ -48,7 +48,7 @@ class TestHeadModule(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_serialize_head_as_dict(self):
+    def test_serialize_as_dict(self):
         expected_result = {"ref": ""}
 
         head_instance = Head()

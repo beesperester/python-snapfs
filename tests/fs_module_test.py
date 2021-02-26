@@ -30,7 +30,7 @@ class TestFSModule(unittest.TestCase):
 
         self.assertTrue(directory_exists)
 
-    def test_save_file(self):
+    def test_store_file(self):
         file_path = get_named_tmpfile_path()
 
         fs.store_file(file_path, "hello world", override=True)
@@ -43,7 +43,7 @@ class TestFSModule(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_save_data_as_file(self):
+    def test_store_dict_as_file(self):
         file_path = get_named_tmpfile_path()
 
         result = {}
@@ -56,7 +56,7 @@ class TestFSModule(unittest.TestCase):
 
         self.assertDictEqual(result, expected_result)
 
-    def test_save_data_as_blob(self):
+    def test_store_dict_as_blob(self):
         data = {"hello": "world"}
 
         result = ""
@@ -82,7 +82,7 @@ class TestFSModule(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_load_file_as_data(self):
+    def test_load_file_as_dict(self):
         data = {"hello": "world"}
 
         expected_result = data
@@ -134,7 +134,7 @@ class TestFSModule(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_load_ignore_file(self):
+    def test_load_ignore_file_as_patterns(self):
         result = []
         expected_result = ["*", "^*.c4d"]
 

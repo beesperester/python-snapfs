@@ -19,7 +19,7 @@ def get_named_tmpfile_path():
 
 
 class TestDifferencesModule(unittest.TestCase):
-    def test_store_differences_as_file(self):
+    def test_store_as_file(self):
         file_path = get_named_tmpfile_path()
 
         result = {}
@@ -38,7 +38,7 @@ class TestDifferencesModule(unittest.TestCase):
 
         self.assertDictEqual(result, expected_result)
 
-    def test_serialize_differences_as_dict(self):
+    def test_serialize_as_dict(self):
         expected_result = {
             "added_files": [],
             "updated_files": [],
@@ -51,7 +51,7 @@ class TestDifferencesModule(unittest.TestCase):
 
         self.assertDictEqual(result, expected_result)
 
-    def test_deserialize_dict_as_differences(self):
+    def test_deserialize_from_dict(self):
         expected_result = {
             "added_files": [],
             "updated_files": [],
@@ -64,7 +64,7 @@ class TestDifferencesModule(unittest.TestCase):
 
         self.assertDictEqual(result, expected_result)
 
-    def test_load_file_as_differences(self):
+    def test_load_from_file(self):
         file_path = get_named_tmpfile_path()
 
         expected_result = {

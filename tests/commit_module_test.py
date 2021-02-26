@@ -28,7 +28,7 @@ class TestCommitModule(unittest.TestCase):
             expected_result,
         )
 
-    def test_store_commit_as_blob(self):
+    def test_store_as_blob(self):
         commit_hashid = ""
 
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -43,7 +43,7 @@ class TestCommitModule(unittest.TestCase):
             ),
         )
 
-    def test_load_blob_as_commit(self):
+    def test_load_from_blob(self):
         commit_dict = {}
 
         with tempfile.TemporaryDirectory() as tmpdirname:

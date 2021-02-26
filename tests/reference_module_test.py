@@ -19,7 +19,7 @@ def get_named_tmpfile_path():
 
 
 class TestReferenceModule(unittest.TestCase):
-    def test_serialize_reference_as_dict(self):
+    def test_serialize_as_dict(self):
         data = {"commit_hashid": ""}
 
         reference_instance = Reference()

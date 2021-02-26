@@ -32,42 +32,38 @@ class TestCommitModule(unittest.TestCase):
             expected_result,
         )
 
-    def test_serialize_file_as_hashid(self):
+    def test_serialize_as_hashid(self):
         self.assertEqual(
             file.serialize_as_hashid(file_instance),
             transform.bytes_as_hashid(file_contents),
         )
 
-    def test_serialize_file_as_dict(self):
+    def test_serialize_as_dict(self):
         self.assertEqual(
             file.serialize_as_dict(file_instance), expected_result
         )
 
-    def test_deserialize_dict_as_file(self):
+    def test_deserialize_from_dict(self):
         result = file.deserialize_from_dict(expected_result)
 
         self.assertEqual(file.serialize_as_dict(result), expected_result)
 
-    def test_store_file_as_blob(self):
+    def test_store_as_blob(self):
         file_hashid = ""
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            file_hashid = file.store_as_blob(
-                Path(tmpdirname), file_instance
-            )
+            file_hashid = file.store_as_blob(Path(tmpdirname), file_instance)
 
         self.assertEqual(
             file_hashid,
             transform.bytes_as_hashid(file_contents),
         )
 
-    def test_load_blob_as_file(self):
+    def test_load_from_blob(self):
         file_hashid = ""
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            file_hashid = file.store_as_blob(
-                Path(tmpdirname), file_instance
-            )
+            file_hashid = file.store_as_blob(Path(tmpdirname), file_instance)
 
             result_file_instance = file.load_from_blob(
                 Path(tmpdirname), file_hashid

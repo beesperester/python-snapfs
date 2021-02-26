@@ -19,7 +19,7 @@ def get_named_tmpfile_path():
 
 
 class TestBranchModule(unittest.TestCase):
-    def test_store_branch_as_file(self):
+    def test_store_as_file(self):
         file_path = get_named_tmpfile_path()
 
         branch_instance = Branch()
@@ -36,7 +36,7 @@ class TestBranchModule(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_load_file_as_branch(self):
+    def test_load_from_file(self):
         file_path = get_named_tmpfile_path()
 
         branch_instance = Branch()
@@ -46,13 +46,11 @@ class TestBranchModule(unittest.TestCase):
 
         branch.store_as_file(file_path, branch_instance)
 
-        result = branch.serialize_as_dict(
-            branch.load_from_file(file_path)
-        )
+        result = branch.serialize_as_dict(branch.load_from_file(file_path))
 
         self.assertDictEqual(result, expected_result)
 
-    def test_serialize_branch_as_dict(self):
+    def test_serialize_as_dict(self):
         data = {"commit_hashid": ""}
 
         branch_instance = Branch()
@@ -62,12 +60,10 @@ class TestBranchModule(unittest.TestCase):
 
         self.assertDictEqual(result, expected_result)
 
-    def test_deserialize_dict_as_branch(self):
+    def test_deserialize_from_dict(self):
         data = {"commit_hashid": ""}
 
         expected_result = data
-        result = branch.serialize_as_dict(
-            branch.deserialize_from_dict(data)
-        )
+        result = branch.serialize_as_dict(branch.deserialize_from_dict(data))
 
         self.assertDictEqual(result, expected_result)

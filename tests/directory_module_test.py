@@ -36,7 +36,7 @@ def fill_tmpfile(path: Path) -> None:
 
 
 class TestTreeModule(unittest.TestCase):
-    def test_store_directory_as_blob(self):
+    def test_store_as_blob(self):
         directory_instance = Directory()
 
         result = ""
@@ -53,7 +53,7 @@ class TestTreeModule(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_load_blob_as_directory(self):
+    def test_load_from_blob(self):
         directory_instance = Directory()
 
         result = {}
@@ -70,7 +70,7 @@ class TestTreeModule(unittest.TestCase):
 
         self.assertDictEqual(result, expected_result)
 
-    def test_serialize_directory_as_hashid(self):
+    def test_serialize_as_hashid(self):
         directory_instance = Directory()
 
         data = {"directories": {}, "files": {}}
@@ -80,7 +80,7 @@ class TestTreeModule(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_serialize_directory_as_dict(self):
+    def test_serialize_as_dict(self):
         directories = {"test": Directory()}
 
         directory_instance = Directory(directories)
@@ -94,7 +94,7 @@ class TestTreeModule(unittest.TestCase):
 
         self.assertDictEqual(result, expected_result)
 
-    def test_directory_as_list(self):
+    def test_transform_as_list(self):
         file_instance = File(Path("test"))
 
         directories = {}
@@ -110,7 +110,7 @@ class TestTreeModule(unittest.TestCase):
 
         self.assertListEqual(result, expected_result)
 
-    def test_list_as_directory(self):
+    def test_transform_from_list(self):
         file_instance = File(Path("test/foobar"))
 
         data = [file_instance]
@@ -130,7 +130,7 @@ class TestTreeModule(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_load_directory_path_as_directory(self):
+    def test_load_from_directory_path(self):
         directory_instance = Directory()
         fake_file_path = Path()
 
@@ -172,7 +172,7 @@ class TestTreeModule(unittest.TestCase):
 
         self.assertDictEqual(result, expected_result)
 
-    def test_compare_directorys(self):
+    def test_compare(self):
         file_a_path = get_named_tmpfile_path()
         file_b_path = get_named_tmpfile_path()
         file_c_path = get_named_tmpfile_path()
