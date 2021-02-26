@@ -95,14 +95,18 @@ class TestTreeModule(unittest.TestCase):
         self.assertDictEqual(result, expected_result)
 
     def test_transform_as_list(self):
-        file_instance = File(Path("test"))
+        file_a_instance = File(Path("file_a"))
+        file_b_instance = File(Path("foobar/file_b"))
 
-        directories = {}
-        files = {"test": file_instance}
+        directory_instance = Directory(
+            {"foobar": Directory({}, {"file_b": file_b_instance})},
+            {"file_a": file_a_instance},
+        )
 
-        directory_instance = Directory(directories, files)
-
-        expected_result = [file.serialize_as_dict(file_instance)]
+        expected_result = [
+            file.serialize_as_dict(file_b_instance),
+            file.serialize_as_dict(file_a_instance),
+        ]
         result = [
             file.serialize_as_dict(x)
             for x in directory.transform_as_list(Path(), directory_instance)
@@ -180,9 +184,14 @@ class TestTreeModule(unittest.TestCase):
         fill_tmpfile(file_a_path)
         fill_tmpfile(file_b_path)
 
-        file_a_instance = File(file_a_path)
+        file_a_instance = File(
+            file_a_path, True, Path(), transform.string_as_hashid("foo")
+        )
         file_b_instance = File(file_b_path)
         file_c_instance = File(file_c_path)
+        file_a_modified_instance = File(
+            file_a_path, True, Path(), transform.string_as_hashid("bar")
+        )
 
         directory_old_instance = Directory(
             {
@@ -198,7 +207,7 @@ class TestTreeModule(unittest.TestCase):
 
         directory_new_instance = Directory(
             {
-                "a": Directory({}, {"file_a.txt": file_a_instance}),
+                "a": Directory({}, {"file_a.txt": file_a_modified_instance}),
                 "b": Directory({}, {"file_b.txt": file_b_instance}),
             }
         )
@@ -207,7 +216,11 @@ class TestTreeModule(unittest.TestCase):
             Path(), directory_old_instance, directory_new_instance
         )
 
-        expected_result = ["added: b/file_b.txt", "removed: a/file_c.txt"]
+        expected_result = [
+            "added: b/file_b.txt",
+            "updated: a/file_a.txt",
+            "removed: a/file_c.txt",
+        ]
         result = differences.serialize_as_messages(differences_instance)
 
         self.assertListEqual(result, expected_result)

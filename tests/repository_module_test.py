@@ -16,8 +16,9 @@ from snapfs import (
     tag,
     reference,
     commit,
+    stage,
 )
-from snapfs.datatypes import Author, Branch, Commit, Tag, Head
+from snapfs.datatypes import Author, Branch, Commit, Stage, Tag, Head
 
 
 def get_named_tmpfile_path():
@@ -262,3 +263,41 @@ class TestRepositoryModule(unittest.TestCase):
             )
 
         self.assertEqual(result, expected_result)
+
+    def test_get_stage(self):
+        stage_instance = Stage()
+
+        expected_result = stage.serialize_as_dict(stage_instance)
+
+        result = {}
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tmppath = Path(tmpdirname)
+
+            stage_path = repository.get_stage_path(tmppath, False)
+
+            makedirs(stage_path.parent)
+
+            stage.store_as_file(stage_path, stage_instance)
+
+            result = stage.serialize_as_dict(repository.get_stage(tmppath))
+
+        self.assertDictEqual(result, expected_result)
+
+    def test_store_stage(self):
+        stage_instance = Stage()
+
+        expected_result = stage.serialize_as_dict(stage_instance)
+
+        result = {}
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tmppath = Path(tmpdirname)
+
+            stage_path = repository.get_stage_path(tmppath, False)
+
+            makedirs(stage_path.parent)
+
+            repository.store_stage(tmppath, stage_instance)
+
+            result = stage.serialize_as_dict(stage.load_from_file(stage_path))
+
+        self.assertDictEqual(result, expected_result)

@@ -159,6 +159,7 @@ def store_stage(path: Path, stage_instance: Stage) -> None:
     stage.store_as_file(get_stage_path(path, False), stage_instance)
 
 
+# repository functions
 def get_directory_accessors() -> List[Callable]:
     return [
         get_repository_path,
